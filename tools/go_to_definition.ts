@@ -1,13 +1,22 @@
 /**
  * go_to_definition - Custom Tool for Roo-Code
- * 
+ *
  * Navigate to the definition of a symbol at a given position in a file.
  * Uses VSCode's built-in definition provider.
+ *
+ * NOTE: Uses dynamic require for vscode to avoid esbuild resolution issues.
+ * The vscode module is provided by VSCode extension host at runtime.
  */
 
 import { parametersSchema as z, defineCustomTool } from "@roo-code/types"
-import * as vscode from "vscode"
 import path from "path"
+
+// Dynamic require for vscode - this module is provided by VSCode at runtime.
+// We use a computed require to prevent esbuild from trying to resolve/bundle it.
+// The vscode module is special and only exists in VSCode extension host context.
+const vscodeModule = "vscode"
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const vscode = require(vscodeModule) as typeof import("vscode")
 
 interface Location {
 	uri: string
@@ -15,6 +24,18 @@ interface Location {
 		start: { line: number; character: number }
 		end: { line: number; character: number }
 	}
+}
+
+// Type for VSCode Location
+interface VscodeLocation {
+	uri: { fsPath: string }
+	range: { start: { line: number; character: number }; end: { line: number; character: number } }
+}
+
+// Type for VSCode LocationLink
+interface VscodeLocationLink {
+	targetUri: { fsPath: string }
+	targetRange: { start: { line: number; character: number }; end: { line: number; character: number } }
 }
 
 export default defineCustomTool({
@@ -31,8 +52,11 @@ export default defineCustomTool({
 	}),
 
 	async execute({ file_path, line, character }, context) {
-		// Get workspace root from context
-		const workspaceRoot = context.task.cwd
+		// Get workspace root from VSCode workspace folders
+		const workspaceFolders = vscode.workspace.workspaceFolders
+		const workspaceRoot = workspaceFolders && workspaceFolders.length > 0
+			? workspaceFolders[0].uri.fsPath
+			: process.cwd()
 
 		// Resolve full file path
 		const fullPath = path.isAbsolute(file_path)
@@ -57,7 +81,7 @@ export default defineCustomTool({
 
 			// Execute VSCode definition provider
 			const result = await vscode.commands.executeCommand<
-				vscode.Location | vscode.Location[] | vscode.LocationLink[] | undefined
+				VscodeLocation | VscodeLocation[] | VscodeLocationLink[] | undefined
 			>("vscode.executeDefinitionProvider", uri, position)
 
 			if (!result) {
@@ -70,13 +94,21 @@ export default defineCustomTool({
 			// Convert result to locations array
 			const locations: Location[] = []
 
-			if (result instanceof vscode.Location) {
+			// Check if it's a single location (has uri property)
+			const isSingleLocation = (r: unknown): r is VscodeLocation =>
+				!!r && typeof r === 'object' && 'uri' in r && !Array.isArray(r)
+			
+			// Check if it's a LocationLink (has targetUri property)
+			const isLocationLink = (r: unknown): r is VscodeLocationLink =>
+				!!r && typeof r === 'object' && 'targetUri' in r
+
+			if (isSingleLocation(result)) {
 				locations.push(convertLocation(result))
 			} else if (Array.isArray(result)) {
 				for (const item of result) {
-					if (item instanceof vscode.Location) {
+					if (isSingleLocation(item)) {
 						locations.push(convertLocation(item))
-					} else {
+					} else if (isLocationLink(item)) {
 						// LocationLink
 						locations.push({
 							uri: item.targetUri.fsPath,
@@ -126,7 +158,7 @@ export default defineCustomTool({
 /**
  * Convert VSCode Location to our format
  */
-function convertLocation(location: vscode.Location): Location {
+function convertLocation(location: VscodeLocation): Location {
 	return {
 		uri: location.uri.fsPath,
 		range: convertRange(location.range),
@@ -136,7 +168,7 @@ function convertLocation(location: vscode.Location): Location {
 /**
  * Convert VSCode Range to 1-based LSP range
  */
-function convertRange(range: vscode.Range): {
+function convertRange(range: { start: { line: number; character: number }; end: { line: number; character: number } }): {
 	start: { line: number; character: number }
 	end: { line: number; character: number }
 } {

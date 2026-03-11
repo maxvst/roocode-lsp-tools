@@ -1,13 +1,22 @@
 /**
  * get_document_symbols - Custom Tool for Roo-Code
- * 
+ *
  * Get all symbols (classes, functions, variables) defined in a document.
  * Uses VSCode's built-in document symbol provider.
+ *
+ * NOTE: Uses dynamic require for vscode to avoid esbuild resolution issues.
+ * The vscode module is provided by VSCode extension host at runtime.
  */
 
 import { parametersSchema as z, defineCustomTool } from "@roo-code/types"
-import * as vscode from "vscode"
 import path from "path"
+
+// Dynamic require for vscode - this module is provided by VSCode at runtime.
+// We use a computed require to prevent esbuild from trying to resolve/bundle it.
+// The vscode module is special and only exists in VSCode extension host context.
+const vscodeModule = "vscode"
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const vscode = require(vscodeModule) as typeof import("vscode")
 
 interface Location {
 	uri: string
@@ -23,6 +32,27 @@ interface SymbolInformation {
 	location: Location
 	containerName?: string
 	children?: SymbolInformation[]
+}
+
+// Type for VSCode DocumentSymbol
+interface VscodeDocumentSymbol {
+	name: string
+	kind: number
+	range: { start: { line: number; character: number }; end: { line: number; character: number } }
+	children: VscodeDocumentSymbol[]
+}
+
+// Type for VSCode SymbolInformation
+interface VscodeSymbolInformation {
+	name: string
+	kind: number
+	location: { uri: { fsPath: string }; range: { start: { line: number; character: number }; end: { line: number; character: number } } }
+	containerName?: string
+}
+
+// Type for VSCode Uri
+interface VscodeUri {
+	fsPath: string
 }
 
 /**
@@ -69,8 +99,11 @@ export default defineCustomTool({
 	}),
 
 	async execute({ file_path }, context) {
-		// Get workspace root from context
-		const workspaceRoot = context.task.cwd
+		// Get workspace root from VSCode workspace folders
+		const workspaceFolders = vscode.workspace.workspaceFolders
+		const workspaceRoot = workspaceFolders && workspaceFolders.length > 0
+			? workspaceFolders[0].uri.fsPath
+			: process.cwd()
 
 		// Resolve full file path
 		const fullPath = path.isAbsolute(file_path)
@@ -89,7 +122,7 @@ export default defineCustomTool({
 
 			// Execute VSCode document symbol provider
 			const result = await vscode.commands.executeCommand<
-				vscode.SymbolInformation[] | vscode.DocumentSymbol[] | undefined
+				VscodeSymbolInformation[] | VscodeDocumentSymbol[] | undefined
 			>("vscode.executeDocumentSymbolProvider", uri)
 
 			if (!result || result.length === 0) {
@@ -128,8 +161,8 @@ export default defineCustomTool({
  * Type guard for DocumentSymbol array
  */
 function isDocumentSymbolArray(
-	result: vscode.SymbolInformation[] | vscode.DocumentSymbol[]
-): result is vscode.DocumentSymbol[] {
+	result: VscodeSymbolInformation[] | VscodeDocumentSymbol[]
+): result is VscodeDocumentSymbol[] {
 	return result.length > 0 && "children" in result[0]
 }
 
@@ -137,8 +170,8 @@ function isDocumentSymbolArray(
  * Convert VSCode DocumentSymbol to our format
  */
 function convertDocumentSymbol(
-	symbol: vscode.DocumentSymbol,
-	uri: vscode.Uri
+	symbol: VscodeDocumentSymbol,
+	uri: VscodeUri
 ): SymbolInformation {
 	const location: Location = {
 		uri: uri.fsPath,
@@ -169,7 +202,7 @@ function convertDocumentSymbol(
  * Convert VSCode SymbolInformation to our format
  */
 function convertSymbolInformation(
-	symbol: vscode.SymbolInformation
+	symbol: VscodeSymbolInformation
 ): SymbolInformation {
 	return {
 		name: symbol.name,

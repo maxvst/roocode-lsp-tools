@@ -1,13 +1,22 @@
 /**
  * get_hover - Custom Tool for Roo-Code
- * 
+ *
  * Get hover information (type, documentation) for a symbol at a given position.
  * Uses VSCode's built-in hover provider.
+ *
+ * NOTE: Uses dynamic require for vscode to avoid esbuild resolution issues.
+ * The vscode module is provided by VSCode extension host at runtime.
  */
 
 import { parametersSchema as z, defineCustomTool } from "@roo-code/types"
-import * as vscode from "vscode"
 import path from "path"
+
+// Dynamic require for vscode - this module is provided by VSCode at runtime.
+// We use a computed require to prevent esbuild from trying to resolve/bundle it.
+// The vscode module is special and only exists in VSCode extension host context.
+const vscodeModule = "vscode"
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const vscode = require(vscodeModule) as typeof import("vscode")
 
 interface HoverResult {
 	contents: string
@@ -17,6 +26,12 @@ interface HoverResult {
 		start: { line: number; character: number }
 		end: { line: number; character: number }
 	}
+}
+
+// Type for VSCode Hover
+interface VscodeHover {
+	contents: unknown
+	range?: { start: { line: number; character: number }; end: { line: number; character: number } }
 }
 
 export default defineCustomTool({
@@ -33,8 +48,11 @@ export default defineCustomTool({
 	}),
 
 	async execute({ file_path, line, character }, context) {
-		// Get workspace root from context
-		const workspaceRoot = context.task.cwd
+		// Get workspace root from VSCode workspace folders
+		const workspaceFolders = vscode.workspace.workspaceFolders
+		const workspaceRoot = workspaceFolders && workspaceFolders.length > 0
+			? workspaceFolders[0].uri.fsPath
+			: process.cwd()
 
 		// Resolve full file path
 		const fullPath = path.isAbsolute(file_path)
@@ -59,7 +77,7 @@ export default defineCustomTool({
 
 			// Execute VSCode hover provider
 			const result = await vscode.commands.executeCommand<
-				vscode.Hover[] | undefined
+				VscodeHover[] | undefined
 			>("vscode.executeHoverProvider", uri, position)
 
 			if (!result || result.length === 0) {
@@ -112,7 +130,7 @@ export default defineCustomTool({
 /**
  * Convert VSCode Hover to our format
  */
-function convertHover(hover: vscode.Hover): HoverResult | null {
+function convertHover(hover: VscodeHover): HoverResult | null {
 	const contents = hover.contents
 	let plainText = ""
 	let language: string | undefined
@@ -160,11 +178,11 @@ function convertHover(hover: vscode.Hover): HoverResult | null {
  * Extract text and language from hover content
  */
 function extractHoverContent(
-	content: vscode.MarkdownString | vscode.MarkedString
+	content: unknown
 ): { text: string; language?: string } {
 	// Handle MarkdownString
-	if (typeof content === "object" && "value" in content) {
-		return { text: (content as vscode.MarkdownString).value }
+	if (typeof content === "object" && content !== null && "value" in content) {
+		return { text: (content as { value: string }).value }
 	}
 
 	// Handle MarkedString (string or { language, value })

@@ -1,13 +1,22 @@
 /**
  * get_completions - Custom Tool for Roo-Code
- * 
+ *
  * Get code completion suggestions at a given position in a file.
  * Uses VSCode's built-in completion provider.
+ *
+ * NOTE: Uses dynamic require for vscode to avoid esbuild resolution issues.
+ * The vscode module is provided by VSCode extension host at runtime.
  */
 
 import { parametersSchema as z, defineCustomTool } from "@roo-code/types"
-import * as vscode from "vscode"
 import path from "path"
+
+// Dynamic require for vscode - this module is provided by VSCode at runtime.
+// We use a computed require to prevent esbuild from trying to resolve/bundle it.
+// The vscode module is special and only exists in VSCode extension host context.
+const vscodeModule = "vscode"
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const vscode = require(vscodeModule) as typeof import("vscode")
 
 interface CompletionItem {
 	label: string
@@ -22,6 +31,23 @@ interface CompletionItem {
 interface CompletionResult {
 	isIncomplete: boolean
 	items: CompletionItem[]
+}
+
+// Type for VSCode CompletionItem
+interface VscodeCompletionItem {
+	label: string | { label: string }
+	kind?: number
+	detail?: string
+	documentation?: string | { value: string }
+	insertText?: string | { value: string }
+	tags?: number[]
+	sortText?: string
+}
+
+// Type for VSCode CompletionList
+interface VscodeCompletionList {
+	items: VscodeCompletionItem[]
+	isIncomplete: boolean
 }
 
 /**
@@ -57,6 +83,9 @@ const CompletionItemKindNames: Record<number, string> = {
 	26: "Issue",
 }
 
+// VSCode CompletionItemTag.Deprecated = 1
+const CompletionItemTagDeprecated = 1
+
 export default defineCustomTool({
 	name: "get_completions",
 	description:
@@ -72,8 +101,11 @@ export default defineCustomTool({
 	}),
 
 	async execute({ file_path, line, character, trigger_character }, context) {
-		// Get workspace root from context
-		const workspaceRoot = context.task.cwd
+		// Get workspace root from VSCode workspace folders
+		const workspaceFolders = vscode.workspace.workspaceFolders
+		const workspaceRoot = workspaceFolders && workspaceFolders.length > 0
+			? workspaceFolders[0].uri.fsPath
+			: process.cwd()
 
 		// Resolve full file path
 		const fullPath = path.isAbsolute(file_path)
@@ -98,7 +130,7 @@ export default defineCustomTool({
 
 			// Execute VSCode completion provider
 			const result = await vscode.commands.executeCommand<
-				vscode.CompletionList | vscode.CompletionItem[] | undefined
+				VscodeCompletionList | VscodeCompletionItem[] | undefined
 			>("vscode.executeCompletionItemProvider", uri, position, trigger_character)
 
 			if (!result) {
@@ -183,7 +215,7 @@ export default defineCustomTool({
  * Convert VSCode completion result to our format
  */
 function convertCompletionResult(
-	result: vscode.CompletionList | vscode.CompletionItem[]
+	result: VscodeCompletionList | VscodeCompletionItem[]
 ): CompletionResult {
 	const items = Array.isArray(result) ? result : result.items
 	const isIncomplete = !Array.isArray(result) && result.isIncomplete
@@ -198,7 +230,7 @@ function convertCompletionResult(
 			typeof item.insertText === "string"
 				? item.insertText
 				: item.insertText?.value,
-		deprecated: item.tags?.includes(vscode.CompletionItemTag.Deprecated) ?? false,
+		deprecated: item.tags?.includes(CompletionItemTagDeprecated) ?? false,
 		sortText: item.sortText,
 	}))
 
@@ -212,7 +244,7 @@ function convertCompletionResult(
  * Extract documentation from VSCode documentation type
  */
 function extractDocumentation(
-	documentation: string | vscode.MarkdownString | undefined
+	documentation: string | { value: string } | undefined
 ): string | undefined {
 	if (!documentation) {
 		return undefined
