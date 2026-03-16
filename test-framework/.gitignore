@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+
+# Compiled files
+cli.js
+
+# Logs
+*.log
+
+# Test artifacts
+.test-vscode-data/
+test-results.xml

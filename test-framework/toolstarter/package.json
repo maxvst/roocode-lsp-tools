@@ -1,0 +1,72 @@
+{
+  "name": "toolstarter",
+  "displayName": "ToolStarter - Test Harness",
+  "description": "VSCode extension that emulates RooCode host for testing custom tools",
+  "version": "0.1.0",
+  "publisher": "roocode-lsp-tools",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "toolstarter.runTest",
+        "title": "ToolStarter: Run Test"
+      },
+      {
+        "command": "toolstarter.showStatus",
+        "title": "ToolStarter: Show Status"
+      },
+      {
+        "command": "toolstarter.reloadTools",
+        "title": "ToolStarter: Reload Tools"
+      }
+    ],
+    "configuration": {
+      "title": "ToolStarter",
+      "properties": {
+        "toolstarter.port": {
+          "type": "number",
+          "default": 9234,
+          "description": "TCP port for IPC server"
+        },
+        "toolstarter.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start IPC server on activation"
+        },
+        "toolstarter.timeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "Default timeout for tool execution (ms)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "build": "npm run compile",
+    "lint": "eslint src --ext ts"
+  },
+  "dependencies": {
+    "esbuild": "^0.19.12",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.0"
+  }
+}

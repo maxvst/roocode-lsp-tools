@@ -1,0 +1,140 @@
+# Test Case: Example JSON Response Validation
+# Пример тест-кейса с валидацией JSON ответа через JSON Schema
+
+name: "Example - JSON Response Validation"
+description: "Пример тестирования tool, возвращающего JSON"
+author: "Test Framework"
+version: "1.0.0"
+
+# Настройки окружения
+environment:
+  timeout: 30000
+
+# Тестовые сценарии
+testCases:
+  # Пример валидации JSON через contains (простая проверка)
+  - id: "json-contains"
+    description: "Проверка наличия ключа в JSON ответе"
+    toolPath: "../src/example-json-tool.ts"
+    toolName: "get_user_info"
+    params:
+      userId: "123"
+    context:
+      mode: "code"
+    expected:
+      success: true
+      contains: "name"
+    timeout: 30000
+
+  # Пример валидации через regex
+  - id: "json-regex"
+    description: "Проверка формата JSON через regex"
+    toolPath: "../src/example-json-tool.ts"
+    toolName: "get_user_info"
+    params:
+      userId: "123"
+    context:
+      mode: "code"
+    expected:
+      success: true
+      matches: '.*"id":\s*".*".*'
+    timeout: 30000
+
+  # Пример валидации через JSON Schema
+  - id: "json-schema-validation"
+    description: "Полная валидация структуры JSON через JSON Schema"
+    toolPath: "../src/example-json-tool.ts"
+    toolName: "get_user_info"
+    params:
+      userId: "123"
+    context:
+      mode: "code"
+    expected:
+      success: true
+      jsonSchema:
+        type: "object"
+        required:
+          - "id"
+          - "name"
+          - "email"
+        properties:
+          id:
+            type: "string"
+          name:
+            type: "string"
+            minLength: 1
+          email:
+            type: "string"
+            format: "email"
+          age:
+            type: "number"
+            minimum: 0
+            maximum: 150
+          active:
+            type: "boolean"
+    timeout: 30000
+
+  # Пример валидации массива через JSON Schema
+  - id: "json-array-schema"
+    description: "Валидация JSON массива"
+    toolPath: "../src/example-json-tool.ts"
+    toolName: "list_users"
+    params:
+      limit: 10
+    context:
+      mode: "code"
+    expected:
+      success: true
+      jsonSchema:
+        type: "array"
+        items:
+          type: "object"
+          required:
+            - "id"
+            - "name"
+          properties:
+            id:
+              type: "string"
+            name:
+              type: "string"
+        maxItems: 10
+    timeout: 30000
+
+  # Пример проверки вложенной структуры
+  - id: "json-nested-schema"
+    description: "Валидация вложенной JSON структуры"
+    toolPath: "../src/example-json-tool.ts"
+    toolName: "get_user_profile"
+    params:
+      userId: "123"
+    context:
+      mode: "code"
+    expected:
+      success: true
+      jsonSchema:
+        type: "object"
+        properties:
+          user:
+            type: "object"
+            properties:
+              id:
+                type: "string"
+              profile:
+                type: "object"
+                properties:
+                  avatar:
+                    type: "string"
+                  bio:
+                    type: "string"
+                  settings:
+                    type: "object"
+                    properties:
+                      theme:
+                        type: "string"
+                        enum:
+                          - "light"
+                          - "dark"
+                          - "auto"
+                      notifications:
+                        type: "boolean"
+    timeout: 30000

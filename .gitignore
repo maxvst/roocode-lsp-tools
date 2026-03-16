@@ -3,6 +3,13 @@ node_modules/
 
 # Build output
 dist/
+out/
+
+# Compiled JavaScript files (keep source .ts)
+*.js
+*.js.map
+*.d.ts
+!cli.js
 
 # TypeScript incremental build
 *.tsbuildinfo
@@ -10,12 +17,18 @@ dist/
 # Logs
 *.log
 
+# Test artifacts
+test-results.xml
+.test-vscode-data/
+
 # OS files
 .DS_Store
 Thumbs.db
 
 # IDE
 .idea/
-.vscode/
 *.swp
 *.swo
+
+# external projects
+3rd-projects/

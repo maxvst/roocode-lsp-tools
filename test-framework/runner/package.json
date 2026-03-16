@@ -1,0 +1,40 @@
+{
+  "name": "isolated-runner",
+  "version": "1.0.0",
+  "description": "Isolated Runner для тестирования RooCode Custom Tools в изолированном VSCode",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "vscode",
+    "testing",
+    "roocode",
+    "tools",
+    "isolated"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  }
+}

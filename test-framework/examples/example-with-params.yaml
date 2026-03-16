@@ -1,0 +1,227 @@
+# Test Case: Example With Parameters
+# Пример тест-кейса с различными типами параметров
+
+name: "Example - Tool With Parameters"
+description: "Пример тестирования tool с параметрами разных типов"
+author: "Test Framework"
+version: "1.0.0"
+
+# Настройки окружения
+environment:
+  timeout: 30000
+
+# Тестовые сценарии
+testCases:
+  # Пример с строковыми параметрами
+  - id: "string-params"
+    description: "Вызов с строковыми параметрами"
+    toolPath: "../src/example-tool.ts"
+    toolName: "search_files"
+    params:
+      query: "test"
+      directory: "/src"
+      filePattern: "*.ts"
+    context:
+      mode: "code"
+    expected:
+      success: true
+      contains: "results"
+    timeout: 30000
+
+  # Пример с числовыми параметрами
+  - id: "numeric-params"
+    description: "Вызов с числовыми параметрами"
+    toolPath: "../src/example-tool.ts"
+    toolName: "paginate_results"
+    params:
+      page: 1
+      limit: 20
+      offset: 0
+    context:
+      mode: "code"
+    expected:
+      success: true
+      contains: "items"
+    timeout: 30000
+
+  # Пример с булевыми параметрами
+  - id: "boolean-params"
+    description: "Вызов с булевыми параметрами"
+    toolPath: "../src/example-tool.ts"
+    toolName: "fetch_data"
+    params:
+      includeMetadata: true
+      cache: false
+      verbose: true
+    context:
+      mode: "code"
+    expected:
+      success: true
+    timeout: 30000
+
+  # Пример с вложенными объектами
+  - id: "nested-object-params"
+    description: "Вызов со вложенными объектами в параметрах"
+    toolPath: "../src/example-tool.ts"
+    toolName: "create_resource"
+    params:
+      name: "test-resource"
+      config:
+        timeout: 5000
+        retries: 3
+        options:
+          strict: true
+          debug: false
+      metadata:
+        author: "test-user"
+        tags:
+          - "test"
+          - "example"
+    context:
+      mode: "code"
+    expected:
+      success: true
+      contains: "created"
+    timeout: 30000
+
+  # Пример с массивами
+  - id: "array-params"
+    description: "Вызов с массивами в параметрах"
+    toolPath: "../src/example-tool.ts"
+    toolName: "batch_process"
+    params:
+      items:
+        - "item1"
+        - "item2"
+        - "item3"
+      options:
+        - "validate"
+        - "transform"
+        - "save"
+      ids:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+    context:
+      mode: "code"
+    expected:
+      success: true
+      contains: "processed"
+    timeout: 30000
+
+  # Пример с смешанными типами
+  - id: "mixed-params"
+    description: "Вызов со смешанными типами параметров"
+    toolPath: "../src/example-tool.ts"
+    toolName: "complex_operation"
+    params:
+      # Строка
+      operation: "transform"
+      # Число
+      version: 2
+      # Булево
+      dryRun: true
+      # Массив строк
+      inputs:
+        - "input1.txt"
+        - "input2.txt"
+      # Объект с вложенностью
+      output:
+        format: "json"
+        pretty: true
+        encoding: "utf-8"
+      # Массив объектов
+      transformations:
+        - type: "filter"
+          condition: "value > 0"
+        - type: "map"
+          expression: "value * 2"
+        - type: "reduce"
+          initial: 0
+          accumulator: "sum"
+    context:
+      mode: "code"
+    expected:
+      success: true
+      matches: ".*transformed.*items.*"
+    timeout: 30000
+
+  # Пример с пустыми параметрами
+  - id: "empty-params"
+    description: "Вызов с пустыми параметрами (default values)"
+    toolPath: "../src/example-tool.ts"
+    toolName: "get_status"
+    params: {}
+    context:
+      mode: "code"
+    expected:
+      success: true
+      contains: "status"
+    timeout: 30000
+
+  # Пример с null/optional параметрами
+  - id: "optional-params"
+    description: "Вызов с опциональными параметрами"
+    toolPath: "../src/example-tool.ts"
+    toolName: "search"
+    params:
+      query: "test"
+      filter: null
+      limit: 10
+      sortBy: null
+    context:
+      mode: "code"
+    expected:
+      success: true
+    timeout: 30000
+
+  # Пример с специальными символами
+  - id: "special-chars-params"
+    description: "Вызов со специальными символами в параметрах"
+    toolPath: "../src/example-tool.ts"
+    toolName: "escape_test"
+    params:
+      text: "Hello \"World\" with 'quotes' and \n newlines"
+      regex: "^[a-zA-Z0-9_\\-\\.]+$"
+      path: "/path/to/file with spaces/file.txt"
+      unicode: "Привет мир 🌍"
+    context:
+      mode: "code"
+    expected:
+      success: true
+    timeout: 30000
+
+  # Пример для режима architect
+  - id: "architect-mode-params"
+    description: "Вызов в режиме architect с параметрами"
+    toolPath: "../src/example-tool.ts"
+    toolName: "analyze_architecture"
+    params:
+      scope: "full"
+      includeTests: true
+      includeDocs: true
+      outputFormat: "markdown"
+    context:
+      mode: "architect"
+    expected:
+      success: true
+      contains: "architecture"
+    timeout: 60000
+
+  # Пример для режима debug
+  - id: "debug-mode-params"
+    description: "Вызов в режиме debug с параметрами"
+    toolPath: "../src/example-tool.ts"
+    toolName: "debug_info"
+    params:
+      verbose: true
+      trace: true
+      memory: true
+    context:
+      mode: "debug"
+    expected:
+      success: true
+      contains: "debug"
+    timeout: 30000

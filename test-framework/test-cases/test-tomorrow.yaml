@@ -1,0 +1,52 @@
+# Test Case: Tomorrow Tool
+# Тестирование tool "tommorow" из src/test.ts
+
+name: "Test Tomorrow Tool"
+description: "Проверка корректности работы tool 'tommorow'"
+author: "Test Framework"
+version: "1.0.0"
+
+# Настройки окружения
+environment:
+  timeout: 30000
+
+# Тестовые сценарии
+testCases:
+  # Базовый тест - выполнение без параметров
+  - id: "tomorrow-basic"
+    description: "Базовый вызов tool без параметров"
+    toolPath: "../src/test.ts"
+    toolName: "tommorow"
+    params: {}
+    context:
+      mode: "code"
+    expected:
+      success: true
+      contains: "хорошо"
+    timeout: 30000
+
+  # Тест в режиме architect
+  - id: "tomorrow-architect"
+    description: "Вызов tool в режиме architect"
+    toolPath: "../src/test.ts"
+    toolName: "tommorow"
+    params: {}
+    context:
+      mode: "architect"
+    expected:
+      success: true
+      contains: "хорошо"
+    timeout: 30000
+
+  # Тест формата результата (regex)
+  - id: "tomorrow-format"
+    description: "Проверка формата результата через regex"
+    toolPath: "../src/test.ts"
+    toolName: "tommorow"
+    params: {}
+    context:
+      mode: "code"
+    expected:
+      success: true
+      matches: ".*Завтра.*хорошо.*"
+    timeout: 30000

@@ -375,6 +375,63 @@ export default defineCustomTool({
 })
 ```
 
+## Тестирование Custom Tools
+
+Проект включает тестовый фреймворк для интеграционного тестирования custom tools в изолированной среде VSCode.
+
+### Структура тестового фреймворка
+
+```
+test-framework/
+├── runner/              # Isolated Runner - запуск VSCode и IPC
+├── toolstarter/         # VSCode Extension - мок RooCode
+├── test-logic/          # Test Logic Layer - выполнение тестов
+├── test-cases/          # YAML тест-кейсы
+│   ├── test-tomorrow.yaml
+│   └── examples/
+├── cli.ts               # CLI интерфейс
+├── run-test.sh          # Скрипт быстрого запуска
+└── ARCHITECTURE.md      # Документация архитектуры
+```
+
+### Быстрый старт
+
+```bash
+# Сборка фреймворка
+cd test-framework && npm run build
+
+# Запуск тестов через скрипт
+./run-test.sh test-cases/test-tomorrow.yaml
+
+# Запуск через CLI
+node cli.js test --verbose test-cases/test-tomorrow.yaml
+```
+
+### Формат тест-кейса
+
+```yaml
+name: "My Tool Test"
+description: "Тестирование custom tool"
+
+testCases:
+  - id: "basic-test"
+    description: "Базовый тест"
+    toolPath: "../src/my-tool.ts"
+    toolName: "my_tool"
+    params: {}
+    expected:
+      success: true
+      contains: "ожидаемый текст"
+```
+
+### Документация
+
+Подробная документация доступна в [`test-framework/ARCHITECTURE.md`](test-framework/ARCHITECTURE.md):
+- Архитектура фреймворка
+- Quick Start гайд
+- Troubleshooting
+- Примеры использования
+
 ## Лицензия
 
 MIT

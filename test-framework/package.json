@@ -1,0 +1,32 @@
+{
+  "name": "roocode-lsp-tools-test-framework",
+  "version": "1.0.0",
+  "description": "Test framework for RooCode Custom Tools",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "runner",
+    "toolstarter",
+    "test-logic"
+  ],
+  "scripts": {
+    "build": "npm run build -ws && tsc cli.ts --outDir . --module NodeNext --moduleResolution NodeNext --target ES2022 --esModuleInterop",
+    "build:runner": "npm run build -w runner",
+    "build:toolstarter": "npm run build -w toolstarter",
+    "build:test-logic": "npm run build -w test-logic",
+    "build:cli": "tsc cli.ts --outDir . --module NodeNext --moduleResolution NodeNext --target ES2022 --esModuleInterop",
+    "clean": "npm run clean -ws && rm -f cli.js",
+    "test": "node cli.js test",
+    "test:verbose": "node cli.js test --verbose",
+    "test:file": "node cli.js test --file",
+    "test:junit": "node cli.js test --reporter junit --output test-results.xml"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
