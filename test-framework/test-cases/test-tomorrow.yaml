@@ -15,7 +15,7 @@ testCases:
   # Базовый тест - выполнение без параметров
   - id: "tomorrow-basic"
     description: "Базовый вызов tool без параметров"
-    toolPath: "../src/test.ts"
+    toolPath: "../../src/test.ts"
     toolName: "tommorow"
     params: {}
     context:
@@ -28,7 +28,7 @@ testCases:
   # Тест в режиме architect
   - id: "tomorrow-architect"
     description: "Вызов tool в режиме architect"
-    toolPath: "../src/test.ts"
+    toolPath: "../../src/test.ts"
     toolName: "tommorow"
     params: {}
     context:
@@ -41,7 +41,7 @@ testCases:
   # Тест формата результата (regex)
   - id: "tomorrow-format"
     description: "Проверка формата результата через regex"
-    toolPath: "../src/test.ts"
+    toolPath: "../../src/test.ts"
     toolName: "tommorow"
     params: {}
     context:

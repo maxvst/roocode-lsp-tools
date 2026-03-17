@@ -128,16 +128,17 @@ Examples:
 export async function runCLI(args: string[]): Promise<number> {
   const options = parseArgs(args);
 
-  // Определяем workspace
-  const workspaceDir = options.workspace || process.cwd();
+  // Определяем пути к компонентам
+  const frameworkDir = path.dirname(path.dirname(__dirname));
+  
+  // Определяем workspace (по умолчанию - test-workspace)
+  const workspaceDir = options.workspace || path.join(frameworkDir, 'test-workspace');
 
   // Определяем путь к тестам
   const testCasesDir = options.file
-    ? path.resolve(workspaceDir, options.file)
-    : path.join(workspaceDir, 'test-cases');
+    ? path.resolve(frameworkDir, options.file)
+    : path.join(frameworkDir, 'test-cases');
 
-  // Определяем пути к компонентам
-  const frameworkDir = path.dirname(path.dirname(__dirname));
   const extensionDevelopmentPath = path.join(frameworkDir, 'toolstarter');
   const userDataDir = path.join(os.tmpdir(), 'roocode-test-vscode-data');
 
