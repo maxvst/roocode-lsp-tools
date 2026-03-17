@@ -368,3 +368,135 @@ export const userServiceInstance = new UserService('TestUser');
 export const userServiceImpl = new UserServiceImpl('Initial Data');
 export const dataContainer = new DataContainer();
 export const chainHelper = new ChainHelper();
+
+// ============================================================================
+// НЕГАТИВНЫЕ СЦЕНАРИИ С НЕВАЛИДНЫМ КОДОМ
+// ============================================================================
+
+/**
+ * NEGATIVE TEST CASE: Вызов несуществующей функции
+ * Symbol: brokenCallerNonExistent (функция с вызовом несуществующей функции)
+ * Command: callHierarchy/incomingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Функция вызывает nonExistentFunction(), которая нигде не определена
+ */
+export function brokenCallerNonExistent(): void {
+    // @ts-ignore - намеренная ошибка: функция не существует
+    nonExistentFunction();
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов метода несуществующего объекта
+ * Symbol: brokenCallerUndefinedObject (функция с вызовом метода undefined)
+ * Command: callHierarchy/incomingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Попытка вызвать метод на undefined объекте
+ */
+export function brokenCallerUndefinedObject(): void {
+    // @ts-ignore - намеренная ошибка: объект не определён
+    undefinedObj.method();
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов функции с опечаткой в имени
+ * Symbol: brokenCallerTypo (функция с опечаткой в имени вызываемой функции)
+ * Command: callHierarchy/incomingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Вызов calculateSums() вместо calculateSum() - опечатка
+ */
+export function brokenCallerTypo(): void {
+    // @ts-ignore - намеренная ошибка: опечатка в имени функции
+    calculateSums(1, 2);
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов приватного метода извне
+ * Symbol: brokenCallerPrivateAccess (функция с доступом к приватному методу)
+ * Command: callHierarchy/incomingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Попытка вызвать приватный метод класса извне
+ */
+export function brokenCallerPrivateAccess(): void {
+    const instance = new PrivateClass();
+    // @ts-ignore - намеренная ошибка: доступ к приватному методу
+    instance.privateMethod();
+}
+
+/**
+ * Вспомогательный класс с приватным методом
+ */
+class PrivateClass {
+    private privateMethod(): void {
+        console.log('private');
+    }
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов через несуществующий интерфейс
+ * Symbol: brokenCallerInvalidInterface (функция с вызовом через неверный интерфейс)
+ * Command: callHierarchy/incomingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Объект не реализует ожидаемый интерфейс
+ */
+export function brokenCallerInvalidInterface(): void {
+    // @ts-ignore - намеренная ошибка: объект не имеет метода interfaceMethod
+    const obj: { interfaceMethod: () => void } = {} as any;
+    obj.interfaceMethod();
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов метода на null
+ * Symbol: brokenCallerNullReference (функция с null-ссылкой)
+ * Command: callHierarchy/incomingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Попытка вызвать метод на null
+ */
+export function brokenCallerNullReference(): void {
+    // @ts-ignore - намеренная ошибка: вызов метода на null
+    const nullObj: null = null;
+    // @ts-expect-error - null не имеет методов
+    nullObj.someMethod();
+}
+
+/**
+ * NEGATIVE TEST CASE: Импорт из сломанного модуля
+ * Symbol: функция из broken-callers.ts
+ * Command: callHierarchy/incomingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Исходный файл содержит синтаксические или семантические ошибки
+ */
+// Импорт из сломанного модуля (раскомментируйте для тестирования)
+// import { brokenCallerFromModule } from './incomingCalls-deps/broken-callers';
+
+/**
+ * NEGATIVE TEST CASE: Циклический вызов из сломанного модуля
+ * Symbol: circularA / circularB из broken-callers.ts
+ * Command: callHierarchy/incomingCalls
+ * Expected: ЧАСТИЧНЫЙ РЕЗУЛЬТАТ (может не найти все вызовы из-за цикла)
+ * Reason: Циклические вызовы между функциями могут сбить LSP
+ */
+
+/**
+ * NEGATIVE TEST CASE: Вызов функции с неправильной сигнатурой
+ * Symbol: brokenSignatureCall
+ * Command: callHierarchy/incomingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Передача аргументов неправильного типа
+ */
+// @ts-expect-error - намеренная ошибка: неправильная сигнатура
+const _brokenSignatureCall = (): void => {
+    calculateSum('wrong', 'types');
+};
+
+/**
+ * NEGATIVE TEST CASE: Вызов через несуществующее свойство
+ * Symbol: brokenPropertyAccess
+ * Command: callHierarchy/incomingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Доступ к несуществующему свойству объекта
+ */
+// @ts-expect-error - намеренная ошибка
+const _brokenPropertyAccess = (): void => {
+    const obj = {};
+    obj.nonExistentProperty.anotherMethod();
+};

@@ -754,3 +754,134 @@ export const reexportedSymbol = 'reexported';
 export type {
     Serializable as ISerializable,
 };
+
+// ============================================================================
+// НЕГАТИВНЫЕ СЦЕНАРИИ С НЕВАЛИДНЫМ КОДОМ
+// ============================================================================
+
+/**
+ * NEGATIVE TEST CASE: Поиск ссылок на несуществующий символ
+ * Symbol: nonExistentSymbol
+ * Command: textDocument/references
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Символ nonExistentSymbol нигде не объявлен в проекте
+ */
+// @ts-expect-error - символ не существует
+const _value = nonExistentSymbol;
+
+/**
+ * NEGATIVE TEST CASE: Поиск ссылок на приватный символ вне области видимости
+ * Symbol: trulyPrivateVariable (приватная переменная из другого модуля)
+ * Command: textDocument/references
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ
+ * Reason: Приватные символы не доступны вне своего модуля/класса
+ */
+class ContainerWithPrivate {
+    #trulyPrivateField: string = 'private';
+    
+    getPrivate(): string {
+        return this.#trulyPrivateField;
+    }
+}
+
+/**
+ * NEGATIVE TEST CASE: Поиск ссылок при некорректном импорте в соседнем файле
+ * Symbol: incorrectlyImportedSymbol
+ * Command: textDocument/references
+ * Expected: ЧАСТИЧНЫЙ РЕЗУЛЬТАТ с предупреждениями
+ * Reason: Символ импортирован с ошибкой в другом файле (опечатка в имени)
+ */
+export const incorrectlyImportedSymbol = 'this symbol is misspelled in broken-usage.ts';
+
+/**
+ * NEGATIVE TEST CASE: Использование символа с опечаткой в имени
+ * Symbol: corectlySpelledSymbol (правильное написание: correctlySpelledSymbol)
+ * Command: textDocument/references
+ * Expected: ОШИБКА - символ не найден
+ * Reason: Опечатка в имени символа при использовании
+ */
+export const correctlySpelledSymbol = 'correct spelling';
+
+// @ts-expect-error - опечатка в имени
+const _typo = corectlySpelledSymbol; // должно быть correctlySpelledSymbol
+
+/**
+ * NEGATIVE TEST CASE: Использование символа с неправильной сигнатурой
+ * Symbol: strictFunction
+ * Command: textDocument/references
+ * Expected: ОШИБКА ТИПИЗАЦИИ при использовании
+ * Reason: Функция вызывается с аргументами неправильного типа
+ */
+export function strictFunction(input: string): number {
+    return input.length;
+}
+
+// @ts-expect-error - неправильный тип аргумента
+const _result = strictFunction(123); // должно быть string, не number
+
+/**
+ * NEGATIVE TEST CASE: Символ, затенённый в локальной области видимости
+ * Symbol: shadowedSymbol
+ * Command: textDocument/references
+ * Expected: ЗАПУТАННЫЙ РЕЗУЛЬТАТ (несколько объявлений)
+ * Reason: Символ объявлен несколько раз в разных областях видимости
+ */
+export const shadowedSymbol = 'outer';
+
+function _withShadowing() {
+    // Это затеняет внешний символ
+    const shadowedSymbol = 'inner';
+    console.log(shadowedSymbol); // ссылка на внутренний
+}
+
+function _anotherScope() {
+    // Другое затенение
+    const shadowedSymbol = 'another';
+    return shadowedSymbol;
+}
+
+/**
+ * NEGATIVE TEST CASE: Символ в мёртвом коде
+ * Symbol: deadCodeSymbol
+ * Command: textDocument/references
+ * Expected: Только объявление (код недостижим)
+ * Reason: Символ используется только в коде, который никогда не выполняется
+ */
+export const deadCodeSymbol = 'this is in dead code';
+
+function _neverExecuted() {
+    if (false) {
+        // Этот код никогда не выполнится
+        console.log(deadCodeSymbol);
+    }
+}
+
+/**
+ * NEGATIVE TEST CASE: Динамический доступ к свойству
+ * Symbol: dynamicProperty
+ * Command: textDocument/references
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ для динамического доступа
+ * Reason: LSP не может отследить динамический доступ к свойствам через переменные
+ */
+export const objectWithProperties = {
+    dynamicProperty: 'value',
+};
+
+const _propName = 'dynamicProperty';
+// Динамический доступ - LSP не сможет найти эту ссылку
+const _dynamicValue = objectWithProperties[_propName as keyof typeof objectWithProperties];
+
+/**
+ * NEGATIVE TEST CASE: Символ в закомментированном коде
+ * Symbol: commentedOutSymbol
+ * Command: textDocument/references
+ * Expected: Только объявление (использование в комментарии не считается)
+ * Reason: Использование символа находится в комментарии
+ */
+export const commentedOutSymbol = 'this is commented out';
+
+// TODO: использовать commentedOutSymbol здесь
+// const x = commentedOutSymbol;
+/*
+   commentedOutSymbol также здесь
+*/

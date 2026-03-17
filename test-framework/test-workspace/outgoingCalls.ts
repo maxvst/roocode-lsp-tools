@@ -527,3 +527,219 @@ export const dataContainer = new DataContainer('test');
 export const staticCaller = new StaticCaller();
 export const computedClass = new ComputedClass();
 export const callbackUser = new CallbackUser();
+
+// ============================================================================
+// НЕГАТИВНЫЕ СЦЕНАРИИ С НЕВАЛИДНЫМ КОДОМ
+// ============================================================================
+
+/**
+ * NEGATIVE TEST CASE: Функция, вызывающая несуществующую функцию
+ * Symbol: brokenOutgoingCaller (функция с вызовом несуществующей цели)
+ * Command: callHierarchy/outgoingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Вызывает nonExistentTarget(), которая нигде не определена
+ */
+export function brokenOutgoingCaller(): void {
+    // @ts-ignore - намеренная ошибка: функция не существует
+    nonExistentTarget();
+}
+
+/**
+ * NEGATIVE TEST CASE: Метод, вызывающий метод несуществующего объекта
+ * Symbol: BrokenClass.methodWithUndefinedCall
+ * Command: callHierarchy/outgoingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Попытка вызвать метод на undefined объекте
+ */
+export class BrokenClass {
+    public methodWithUndefinedCall(): void {
+        // @ts-ignore - намеренная ошибка: объект не определён
+        undefinedObject.nonExistentMethod();
+    }
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов через null/undefined
+ * Symbol: callThroughNull
+ * Command: callHierarchy/outgoingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Попытка вызвать метод на null
+ */
+export function callThroughNull(): void {
+    const nullValue: null = null;
+    // @ts-expect-error - null не имеет методов
+    nullValue.someMethod();
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов с неправильной сигнатурой
+ * Symbol: callWithInvalidSignature
+ * Command: callHierarchy/outgoingCalls
+ * Expected: LSP может найти вызов, но он семантически неверен
+ * Reason: Передача аргументов неправильного типа в helperFunctionA
+ */
+export function callWithInvalidSignature(): void {
+    // @ts-ignore - намеренная ошибка: неправильные типы
+    helperFunctionA(123, 456); // ожидает string, переданы числа
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов деструктурированной функции, которая не была экспортирована
+ * Symbol: callNonExportedDestructured
+ * Command: callHierarchy/outgoingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Попытка вызвать функцию, которая не была экспортирована из модуля
+ */
+export function callNonExportedDestructured(): void {
+    // @ts-ignore - намеренная ошибка: функция не экспортирована
+    const { nonExportedFunction } = require('./outgoingCalls-deps/targets');
+    nonExportedFunction();
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов функции из сломанного модуля
+ * Symbol: callFromBrokenModule
+ * Command: callHierarchy/outgoingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Целевой модуль содержит синтаксические ошибки
+ */
+// Раскомментируйте для тестирования:
+// import { brokenTargetFunction } from './outgoingCalls-deps/broken-targets';
+// export function callFromBrokenModule(): void {
+//     brokenTargetFunction();
+// }
+
+/**
+ * NEGATIVE TEST CASE: Вызов функции с синтаксической ошибкой в аргументах
+ * Symbol: callWithSyntaxErrorInArgs
+ * Command: callHierarchy/outgoingCalls
+ * Expected: ОШИБКА ТИПА (но не парсинга - файл должен компилироваться)
+ * Reason: Передача пустого объекта вместо ожидаемой строки
+ */
+export function callWithSyntaxErrorInArgs(): void {
+    // @ts-ignore - намеренная ошибка: передача объекта вместо строки
+    helperFunctionA({} as any); // неправильный тип аргумента
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов метода удалённого класса
+ * Symbol: callDeletedClassMethod
+ * Command: callHierarchy/outgoingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Класс был удалён из модуля
+ */
+export function callDeletedClassMethod(): void {
+    // @ts-ignore - намеренная ошибка: класс не существует
+    const instance = new DeletedClass();
+    instance.deletedMethod();
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов функции с циклической зависимостью
+ * Symbol: circularOutgoingA
+ * Command: callHierarchy/outgoingCalls
+ * Expected: Может привести к неполному результату
+ * Reason: Циклическая зависимость между функциями
+ */
+export function circularOutgoingA(): void {
+    circularOutgoingB();
+}
+
+/**
+ * NEGATIVE TEST CASE: Вторая функция в циклической зависимости
+ * Symbol: circularOutgoingB
+ * Command: callHierarchy/outgoingCalls
+ * Expected: Может привести к неполному результату
+ * Reason: Циклическая зависимость между функциями
+ */
+export function circularOutgoingB(): void {
+    circularOutgoingA();
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов функции с ошибкой типа в цепочке
+ * Symbol: callWithBrokenChain
+ * Command: callHierarchy/outgoingCalls
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Разорванная цепочка вызовов из-за ошибки типа
+ */
+export function callWithBrokenChain(): void {
+    // @ts-ignore - намеренная ошибка: цепочка разорвана
+    getUndefinedObject().then((result: any) => result.nonExistent());
+}
+
+/**
+ * Вспомогательная функция, возвращающая undefined
+ */
+function getUndefinedObject(): undefined {
+    return undefined;
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов асинхронной функции без await
+ * Symbol: callAsyncWithoutAwait
+ * Command: callHierarchy/outgoingCalls
+ * Expected: LSP найдёт вызов, но результат будет неверным
+ * Reason: Асинхронная функция вызывается без await, результат теряется
+ */
+export function callAsyncWithoutAwait(): void {
+    // @ts-ignore - намеренная ошибка: отсутствует await
+    asyncProcessor('test'); // результат Promise игнорируется
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов функции с неправильным this
+ * Symbol: callWithWrongThis
+ * Command: callHierarchy/outgoingCalls
+ * Expected: Ошибка времени выполнения
+ * Reason: Контекст this утерян при передаче метода
+ */
+export function callWithWrongThis(): void {
+    const obj = {
+        value: 'test',
+        getValue(): string {
+            return this.value;
+        }
+    };
+    
+    // @ts-ignore - намеренная ошибка: потеря контекста this
+    const extractedMethod = obj.getValue;
+    extractedMethod(); // this будет undefined
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов функции с бесконечной рекурсией
+ * Symbol: infiniteRecursionCaller
+ * Command: callHierarchy/outgoingCalls
+ * Expected: Может привести к зависанию LSP
+ * Reason: Функция вызывает сама себя без базового случая
+ */
+const _infiniteRecursionCaller = (): never => {
+    return _infiniteRecursionCaller();
+};
+
+/**
+ * NEGATIVE TEST CASE: Вызов метода на примитиве
+ * Symbol: callMethodOnPrimitive
+ * Command: callHierarchy/outgoingCalls
+ * Expected: ОШИБКА ТИПА
+ * Reason: Попытка вызвать несуществующий метод на примитивном типе
+ */
+const _callMethodOnPrimitive = (): void => {
+    const num: number = 42;
+    // @ts-expect-error - метод не существует на примитиве
+    (num as any).nonExistentMethod();
+};
+
+/**
+ * NEGATIVE TEST CASE: Вызов функции с некорректным дженериком
+ * Symbol: callWithInvalidGeneric
+ * Command: callHierarchy/outgoingCalls
+ * Expected: ОШИБКА ТИПА
+ * Reason: Передача типа, не соответствующего ограничениям дженерика
+ */
+const _callWithInvalidGeneric = (): void => {
+    // combineValues ожидает два аргумента, передаём один - это ошибка типа
+    // @ts-expect-error - недостаточно аргументов
+    combineValues<string>('only one');
+};

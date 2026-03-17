@@ -587,3 +587,105 @@ namespace Utils {
 function testNamespace(): string {
     return Utils.formatDate(new Date());
 }
+
+// ============================================================================
+// НЕГАТИВНЫЕ СЦЕНАРИИ С НЕВАЛИДНЫМ КОДОМ
+// ============================================================================
+
+/**
+ * NEGATIVE TEST CASE: Использование неопределённой переменной
+ * Symbol: undefinedVariable
+ * Command: textDocument/declaration
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Переменная undefinedVariable не имеет объявления - она нигде не определена
+ */
+{
+    // @ts-ignore
+    const result = undefinedVariable;
+    console.log(result);
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов функции без импорта
+ * Symbol: nonImportedFunction
+ * Command: textDocument/declaration
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Функция nonImportedFunction не импортирована и не определена в текущем файле
+ */
+{
+    // @ts-ignore
+    nonImportedFunction();
+}
+
+/**
+ * NEGATIVE TEST CASE: Опечатка в имени импорта
+ * Symbol: imporrt (вместо import)
+ * Command: textDocument/declaration
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Синтаксическая ошибка в операторе импорта - "imporrt" вместо "import"
+ */
+{
+    // @ts-ignore
+    // imporrt { something } from './declaration-deps/variables'; // Синтаксическая ошибка
+}
+
+/**
+ * NEGATIVE TEST CASE: Импорт из несуществующего модуля
+ * Symbol: x (из несуществующего модуля)
+ * Command: textDocument/declaration
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Модуль './non-existent-module' не существует в файловой системе
+ */
+{
+    // @ts-ignore
+    // import { x } from './non-existent-module';
+}
+
+/**
+ * NEGATIVE TEST CASE: Импорт приватной функции
+ * Symbol: privateFunction
+ * Command: textDocument/declaration
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Функция privateFunction в broken-exports.ts не имеет ключевого слова export
+ */
+{
+    // @ts-ignore
+    // import { privateFunction } from './declaration-deps/broken-exports';
+}
+
+/**
+ * NEGATIVE TEST CASE: Обращение к несуществующему свойству объекта
+ * Symbol: config.nonExistentProperty
+ * Command: textDocument/declaration
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Свойство nonExistentProperty не существует в типе конфигурации
+ */
+{
+    // @ts-ignore
+    const value = config.nonExistentProperty;
+    console.log(value);
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов метода с опечаткой
+ * Symbol: simpleFunction.wrongMethodName
+ * Command: textDocument/declaration
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: simpleFunction является функцией, а не объектом с методами
+ */
+{
+    // @ts-ignore
+    simpleFunction.wrongMethodName();
+}
+
+/**
+ * NEGATIVE TEST CASE: Использование типа как значения
+ * Symbol: MyType (как значение)
+ * Command: textDocument/declaration
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: MyType является псевдонимом типа (type alias), а не значением
+ */
+{
+    // @ts-ignore
+    const instance = new MyType();
+}

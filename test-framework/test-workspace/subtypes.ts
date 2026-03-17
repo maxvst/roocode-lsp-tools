@@ -871,3 +871,256 @@ export {
   // Test Case 20
   MultiImplementation
 };
+
+// ============================================================================
+// НЕГАТИВНЫЕ СЦЕНАРИИ С НЕВАЛИДНЫМ КОДОМ
+// ============================================================================
+
+{
+  /**
+   * NEGATIVE TEST CASE: Поиск подтипов для несуществующего класса
+   * Symbol: NonExistentClass (класс не существует)
+   * Command: typeHierarchy/subtypes
+   * Expected: ОШИБКА или ПУСТОЙ РЕЗУЛЬТАТ
+   * Reason: Невозможно найти подтипы для класса, который не определён в проекте.
+   */
+  // @ts-expect-error - намеренная ошибка: класс не существует
+  const _instance: NonExistentClass = null;
+  console.log(_instance);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Абстрактный класс без наследников в сломанном контексте
+   * Symbol: BrokenAbstractClass (абстрактный класс с ошибками)
+   * Command: typeHierarchy/subtypes
+   * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+   * Reason: Абстрактный класс определён с ошибками, наследники не могут быть корректно созданы.
+   */
+  // @ts-expect-error - абстрактный класс с несуществующим базовым типом
+  abstract class BrokenAbstractClass extends NonExistentAbstractBase {
+    public abstract process(): void;
+  }
+  
+  // Потенциальный наследник не может корректно наследовать сломанный базовый класс
+  // @ts-expect-error - базовый класс содержит ошибки
+  class BrokenConcreteChild extends BrokenAbstractClass {
+    public process(): void {
+      console.log('broken implementation');
+    }
+  }
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Интерфейс без реализаций в сломанном контексте
+   * Symbol: IBrokenInterface (интерфейс с ошибками в определении)
+   * Command: typeHierarchy/subtypes
+   * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+   * Reason: Интерфейс ссылается на несуществующие типы, реализации невозможны.
+   */
+  // @ts-expect-error - интерфейс ссылается на несуществующий тип
+  interface IBrokenInterface extends IMissingBaseInterface {
+    brokenMethod(param: IMissingType): void;
+  }
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Поиск подтипов для типа, не являющегося классом/интерфейсом
+   * Symbol: brokenVariable (переменная с типом объединения)
+   * Command: typeHierarchy/subtypes
+   * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+   * Reason: Переменные и типы объединения не могут иметь подтипов в классическом понимании.
+   */
+  const brokenVariable: string | number | boolean = 'broken';
+  console.log(brokenVariable);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Поиск подтипов для null типа
+   * Symbol: nullType (null значение)
+   * Command: typeHierarchy/subtypes
+   * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+   * Reason: null не является классом или интерфейсом.
+   */
+  const nullType: null = null;
+  console.log(nullType);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Поиск подтипов для undefined типа
+   * Symbol: undefinedType (undefined значение)
+   * Command: typeHierarchy/subtypes
+   * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+   * Reason: undefined не является классом или интерфейсом.
+   */
+  const undefinedType: undefined = undefined;
+  console.log(undefinedType);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Поиск подтипов для типа функции
+   * Symbol: brokenFunction (функция)
+   * Command: typeHierarchy/subtypes
+   * Expected: ПУСТОЙ РЕЗУЛЬТАТ
+   * Reason: Функции не имеют подтипов в иерархии классов.
+   */
+  function brokenFunction(param: unknown): unknown {
+    return param;
+  }
+  console.log(brokenFunction);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Поиск подтипов для типа массива
+   * Symbol: brokenArray (массив)
+   * Command: typeHierarchy/subtypes
+   * Expected: ПУСТОЙ РЕЗУЛЬТАТ или неожидаемое поведение
+   * Reason: Массив является встроенным типом, не имеющим наследников в пользовательском коде.
+   */
+  const brokenArray: string[] = ['broken', 'array'];
+  console.log(brokenArray);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Поиск подтипов для типа кортежа
+   * Symbol: brokenTuple (кортеж)
+   * Command: typeHierarchy/subtypes
+   * Expected: ПУСТОЙ РЕЗУЛЬТАТ
+   * Reason: Кортежи не участвуют в иерархии типов как классы.
+   */
+  const brokenTuple: [string, number, boolean] = ['test', 42, true];
+  console.log(brokenTuple);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Класс с приватным конструктором (эмуляция final)
+   * Symbol: SealedClass (класс с приватным конструктором)
+   * Command: typeHierarchy/subtypes
+   * Expected: ПУСТОЙ РЕЗУЛЬТАТ (наследование невозможно вне класса)
+   * Reason: Приватный конструктор предотвращает создание наследников вне тела класса.
+   */
+  class SealedClass {
+    private static _instance: SealedClass | null = null;
+    
+    private constructor(private value: string) {}
+    
+    public static getInstance(): SealedClass {
+      if (!SealedClass._instance) {
+        SealedClass._instance = new SealedClass('sealed');
+      }
+      return SealedClass._instance;
+    }
+    
+    public getValue(): string {
+      return this.value;
+    }
+  }
+  
+  // Попытка наследования невозможна
+  // @ts-expect-error - конструктор SealedClass приватный
+  class AttemptedInheritance extends SealedClass {
+    public extra: string = '';
+  }
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Тип never
+   * Symbol: neverType (тип never)
+   * Command: typeHierarchy/subtypes
+   * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+   * Reason: Тип never не может иметь экземпляров или наследников.
+   */
+  const neverFunction = (): never => {
+    throw new Error('Never returns');
+  };
+  console.log(neverFunction);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Тип unknown
+   * Symbol: unknownType (тип unknown)
+   * Command: typeHierarchy/subtypes
+   * Expected: ПУСТОЙ РЕЗУЛЬТАТ или неожидаемое поведение
+   * Reason: unknown является особым типом TypeScript, не участвующим в иерархии классов.
+   */
+  const unknownType: unknown = { arbitrary: 'data' };
+  console.log(unknownType);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Тип any
+   * Symbol: anyType (тип any)
+   * Command: typeHierarchy/subtypes
+   * Expected: ПУСТОЙ РЕЗУЛЬТАТ или неожидаемое поведение
+   * Reason: any отключает проверку типов и не имеет иерархии.
+   */
+  const anyType: any = 'anything goes';
+  console.log(anyType);
+}
+
+// Импорт сломанных типов из отдельного файла для кросс-файловых тестов
+import {
+  BrokenInheritanceChild,
+  IncompleteImplementation,
+  FinalLikeClass,
+  WrongSignatureChild
+} from './subtypes-deps/broken-inheritance';
+
+{
+  /**
+   * NEGATIVE TEST CASE: Наследник с неправильной сигнатурой метода
+   * Symbol: WrongSignatureChild (из broken-inheritance.ts)
+   * Command: typeHierarchy/subtypes
+   * Expected: ОШИБКА или некорректный результат
+   * Reason: Метод наследника не соответствует сигнатуре базового класса.
+   */
+  const _wrongSig: WrongSignatureChild = null as any;
+  console.log(_wrongSig);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Реализация интерфейса с пропущенными методами
+   * Symbol: IncompleteImplementation (из broken-inheritance.ts)
+   * Command: typeHierarchy/subtypes
+   * Expected: ОШИБКА компиляции
+   * Reason: Не все методы интерфейса реализованы.
+   */
+  const _incomplete: IncompleteImplementation = null as any;
+  console.log(_incomplete);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Класс, наследующий от final-подобного класса
+   * Symbol: FinalLikeClass (из broken-inheritance.ts)
+   * Command: typeHierarchy/subtypes
+   * Expected: ОШИБКА или ПУСТОЙ РЕЗУЛЬТАТ
+   * Reason: Класс спроектирован как final через приватный конструктор.
+   */
+  const _final: FinalLikeClass = null as any;
+  console.log(_final);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Наследник сломанного родительского класса
+   * Symbol: BrokenInheritanceChild (из broken-inheritance.ts)
+   * Command: typeHierarchy/subtypes
+   * Expected: ОШИБКА
+   * Reason: Родительский класс содержит ошибки в определении.
+   */
+  const _brokenChild: BrokenInheritanceChild = null as any;
+  console.log(_brokenChild);
+}

@@ -1076,3 +1076,174 @@ function testRecordValueType(): Record<string, EventCallback<UserType>> {
     };
     return handlers;
 }
+
+// ============================================================================
+// НЕГАТИВНЫЕ СЦЕНАРИИ С НЕВАЛИДНЫМ КОДОМ
+// ============================================================================
+
+/**
+ * NEGATIVE TEST CASE: Переменная с неопределённым типом
+ * Symbol: undefinedTypeVariable
+ * Command: textDocument/typeDefinition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Переменная не имеет объявления типа и не может быть выведена
+ */
+{
+    // @ts-ignore
+    const undefinedTypeVariable = nonExistentValue;
+    console.log(undefinedTypeVariable);
+}
+
+/**
+ * NEGATIVE TEST CASE: Generic без указания type parameter
+ * Symbol: ContainerClass (без <T>)
+ * Command: textDocument/typeDefinition
+ * Expected: ЧАСТИЧНЫЙ УСПЕХ - переход к ContainerClass, но тип не определён
+ * Reason: Generic тип используется без указания type parameter
+ */
+{
+    // @ts-ignore
+    const container: ContainerClass = new ContainerClass();
+    console.log(container);
+}
+
+/**
+ * NEGATIVE TEST CASE: Type assertion на несуществующий тип
+ * Symbol: NonExistentType (в type assertion)
+ * Command: textDocument/typeDefinition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Тип NonExistentType не определён в проекте
+ */
+{
+    // @ts-ignore
+    const value = "test" as NonExistentType;
+    console.log(value);
+}
+
+/**
+ * NEGATIVE TEST CASE: Импорт типа из сломанного файла
+ * Symbol: BrokenType (из broken-types.ts)
+ * Command: textDocument/typeDefinition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Файл broken-types.ts содержит некорректные определения типов
+ */
+{
+    // @ts-ignore
+    // import { BrokenType } from './typeDefinition-deps/broken-types';
+    // const broken: BrokenType = {};
+}
+
+/**
+ * NEGATIVE TEST CASE: Циклическая ссылка в типе
+ * Symbol: CircularType
+ * Command: textDocument/typeDefinition
+ * Expected: ОГРАНИЧЕННЫЙ УСПЕХ - может привести к бесконечному циклу
+ * Reason: Тип содержит циклическую ссылку на самого себя
+ */
+{
+    interface CircularType {
+        self: CircularType;
+    }
+    const circular: CircularType = {} as CircularType;
+    circular.self = circular;
+    console.log(circular);
+}
+
+/**
+ * NEGATIVE TEST CASE: Использование значения как типа
+ * Symbol: valueAsType (используется как тип)
+ * Command: textDocument/typeDefinition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Значение 'stringValue' используется там, где ожидается тип
+ */
+{
+    const stringValue = "hello";
+    // @ts-ignore
+    const wrongUsage: stringValue = "test";
+    console.log(wrongUsage);
+}
+
+/**
+ * NEGATIVE TEST CASE: Обращение к типу через точку у примитива
+ * Symbol: string.nonExistentMethod
+ * Command: textDocument/typeDefinition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Метод nonExistentMethod не существует у типа string
+ */
+{
+    const str = "test";
+    // @ts-ignore
+    const result = str.nonExistentMethod();
+    console.log(result);
+}
+
+/**
+ * NEGATIVE TEST CASE: Generic с неверным типом параметра
+ * Symbol: Response<NonExistentType>
+ * Command: textDocument/typeDefinition
+ * Expected: ЧАСТИЧНЫЙ УСПЕХ для Response, ОШИБКА для NonExistentType
+ * Reason: Generic параметр NonExistentType не существует
+ */
+{
+    // @ts-ignore
+    const response: Response<NonExistentType> = {
+        success: true,
+        data: {}
+    };
+    console.log(response);
+}
+
+/**
+ * NEGATIVE TEST CASE: Type assertion на null
+ * Symbol: null as UserType
+ * Command: textDocument/typeDefinition
+ * Expected: УСПЕХ для UserType, но ОШИБКА времени выполнения
+ * Reason: null приводится к типу UserType - это некорректное использование
+ */
+{
+    // @ts-ignore
+    const nullUser: UserType = null as UserType;
+    console.log(nullUser);
+}
+
+/**
+ * NEGATIVE TEST CASE: Использование typeof на несуществующей переменной
+ * Symbol: typeof nonExistentVariable
+ * Command: textDocument/typeDefinition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Переменная nonExistentVariable не существует
+ */
+{
+    // @ts-ignore
+    type InferredType = typeof nonExistentVariable;
+    const inferred: InferredType = undefined;
+    console.log(inferred);
+}
+
+/**
+ * NEGATIVE TEST CASE: keyof на несуществующем типе
+ * Symbol: keyof NonExistentInterface
+ * Command: textDocument/typeDefinition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Интерфейс NonExistentInterface не существует
+ */
+{
+    // @ts-ignore
+    type Keys = keyof NonExistentInterface;
+    const key: Keys = "any";
+    console.log(key);
+}
+
+/**
+ * NEGATIVE TEST CASE: Indexed access type с неверным ключом
+ * Symbol: UserType['nonExistentProperty']
+ * Command: textDocument/typeDefinition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Свойство nonExistentProperty не существует в UserType
+ */
+{
+    // @ts-ignore
+    type WrongProperty = UserType['nonExistentProperty'];
+    const prop: WrongProperty = undefined;
+    console.log(prop);
+}

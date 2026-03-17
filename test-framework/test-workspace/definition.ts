@@ -801,3 +801,141 @@ function testDefinitionNamespaceMethod(): void {
 function testDefinitionNamespaceProperty(): string {
     return DefinitionUtils.VERSION;
 }
+
+// ============================================================================
+// НЕГАТИВНЫЕ СЦЕНАРИИ С НЕВАЛИДНЫМ КОДОМ
+// ============================================================================
+
+/**
+ * NEGATIVE TEST CASE: Класс используется без импорта
+ * Symbol: NonImportedClass
+ * Command: textDocument/definition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Класс NonImportedClass не импортирован и не определён в текущем файле
+ */
+{
+    // @ts-ignore
+    const instance = new NonImportedClass();
+    console.log(instance);
+}
+
+/**
+ * NEGATIVE TEST CASE: Обращение к несуществующему свойству объекта
+ * Symbol: obj.nonExistentProperty
+ * Command: textDocument/definition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Свойство nonExistentProperty не существует в типе объекта
+ */
+{
+    const obj = { name: "test", value: 42 };
+    // @ts-ignore
+    const prop = obj.nonExistentProperty;
+    console.log(prop);
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов метода с опечаткой
+ * Symbol: someObject.methhod (вместо method)
+ * Command: textDocument/definition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Метод "methhod" не существует - опечатка в имени метода
+ */
+{
+    const someObject = {
+        method: () => "result"
+    };
+    // @ts-ignore
+    someObject.methhod();
+}
+
+/**
+ * NEGATIVE TEST CASE: Импорт из сломанного файла с синтаксической ошибкой
+ * Symbol: brokenExport (из broken.ts)
+ * Command: textDocument/definition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Файл broken.ts содержит синтаксическую ошибку и не может быть корректно разобран
+ */
+{
+    // @ts-ignore
+    // import { brokenExport } from './definition-deps/broken';
+}
+
+/**
+ * NEGATIVE TEST CASE: Использование переменной до её объявления
+ * Symbol: usedBeforeDeclaration
+ * Command: textDocument/definition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Переменная используется до её объявления (Temporal Dead Zone)
+ */
+{
+    // @ts-ignore
+    console.log(usedBeforeDeclaration);
+    const usedBeforeDeclaration = "too late";
+}
+
+/**
+ * NEGATIVE TEST CASE: Обращение к свойству null
+ * Symbol: nullValue.property
+ * Command: textDocument/definition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: null не имеет свойств
+ */
+{
+    const nullValue: null = null;
+    // @ts-ignore
+    const prop = nullValue.property;
+    console.log(prop);
+}
+
+/**
+ * NEGATIVE TEST CASE: Обращение к свойству undefined
+ * Symbol: undefinedValue.property
+ * Command: textDocument/definition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: undefined не имеет свойств
+ */
+{
+    const undefinedValue: undefined = undefined;
+    // @ts-ignore
+    const prop = undefinedValue.property;
+    console.log(prop);
+}
+
+/**
+ * NEGATIVE TEST CASE: Индекс за пределами массива
+ * Symbol: arr[100] (несуществующий индекс)
+ * Command: textDocument/definition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА (для элемента)
+ * Reason: Индекс 100 выходит за пределы массива длиной 3
+ */
+{
+    const arr = [1, 2, 3];
+    // @ts-ignore
+    const element = arr[100];
+    console.log(element);
+}
+
+/**
+ * NEGATIVE TEST CASE: Вызов несуществующей функции
+ * Symbol: nonExistentFunction
+ * Command: textDocument/definition
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ или ОШИБКА
+ * Reason: Функция nonExistentFunction нигде не определена
+ */
+{
+    // @ts-ignore
+    nonExistentFunction();
+}
+
+/**
+ * NEGATIVE TEST CASE: Неправильное использование generic типа
+ * Symbol: GenericContainer (без type parameter)
+ * Command: textDocument/definition
+ * Expected: ЧАСТИЧНЫЙ УСПЕХ - переход к GenericContainer, но с ошибкой типа
+ * Reason: Generic тип используется без указания type parameter
+ */
+{
+    // @ts-ignore
+    const container: GenericContainer = new GenericContainer();
+    console.log(container);
+}

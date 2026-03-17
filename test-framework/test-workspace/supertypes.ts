@@ -460,3 +460,209 @@ export {
   SingletonClass,
   TypeAliasUser
 };
+
+// ============================================================================
+// НЕГАТИВНЫЕ СЦЕНАРИИ С НЕВАЛИДНЫМ КОДОМ
+// ============================================================================
+
+{
+  /**
+   * NEGATIVE TEST CASE: Наследование от несуществующего класса
+   * Symbol: BrokenChild (класс, наследующий от NonExistentBase)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА или ПУСТОЙ РЕЗУЛЬТАТ
+   * Reason: Класс NonExistentBase не существует - TypeScript компилятор выдаст ошибку,
+   *          LSP может не смочь построить иерархию для несуществующего базового типа.
+   */
+  // @ts-expect-error - намеренная ошибка: класс NonExistentBase не существует
+  class BrokenChild extends NonExistentBase {
+    private value: string;
+    
+    constructor(value: string) {
+      super();
+      this.value = value;
+    }
+  }
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Интерфейс расширяет несуществующий интерфейс
+   * Symbol: IBroken (интерфейс, расширяющий IMissing)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА или ПУСТОЙ РЕЗУЛЬТАТ
+   * Reason: Интерфейс IMissing не определён - невозможно построить иерархию.
+   */
+  // @ts-expect-error - намеренная ошибка: интерфейс IMissing не существует
+  interface IBroken extends IMissing {
+    brokenMethod(): void;
+  }
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Циклическое наследование классов
+   * Symbol: CircularA / CircularB (классы с циклической зависимостью)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА или бесконечный цикл (зависит от реализации LSP)
+   * Reason: Циклическое наследование A extends B, B extends A создаёт
+   *          неразрешимую циклическую зависимость.
+   */
+  // Примечание: настоящий цикл невозможен в TypeScript, эмулируем через any
+  // @ts-expect-error - циклическое наследование невозможно
+  class CircularA extends (null as any) {
+    public valueA: string = '';
+  }
+  
+  // @ts-expect-error - циклическое наследование невозможно
+  class CircularB extends (null as any) {
+    public valueB: number = 0;
+  }
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Класс наследуется от примитивного типа
+   * Symbol: WrongNumber (класс, наследующий от number)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА
+   * Reason: В TypeScript невозможно наследоваться от примитивных типов.
+   *          Это вызовет ошибку компиляции.
+   */
+  // @ts-expect-error - невозможно наследоваться от примитивного типа
+  class WrongNumber extends number {
+    public extra: string = '';
+  }
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Класс наследуется от строкового литерала
+   * Symbol: WrongString (класс, наследующий от string)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА
+   * Reason: Примитивные типы не могут быть базовыми классами.
+   */
+  // @ts-expect-error - невозможно наследоваться от string
+  class WrongString extends string {
+    public prefix: string = '';
+  }
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Класс наследуется от boolean
+   * Symbol: WrongBoolean (класс, наследующий от boolean)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА
+   * Reason: Boolean является примитивным типом и не может быть базовым классом.
+   */
+  // @ts-expect-error - невозможно наследоваться от boolean
+  class WrongBoolean extends boolean {
+    public flag: boolean = false;
+  }
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Implements с несуществующим интерфейсом
+   * Symbol: BrokenImplementation (класс с implements INonExistent)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА или ПУСТОЙ РЕЗУЛЬТАТ
+   * Reason: Интерфейс INonExistent не определён - невозможно определить
+   *          иерархию супертипов.
+   */
+  // @ts-expect-error - намеренная ошибка: интерфейс INonExistent не существует
+  class BrokenImplementation implements INonExistent {
+    public method(): void {}
+  }
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Implements с множественными несуществующими интерфейсами
+   * Symbol: MultiBrokenImpl (класс с implements IMissing1, IMissing2)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА
+   * Reason: Ни один из указанных интерфейсов не существует.
+   */
+  // @ts-expect-error - намеренная ошибка: интерфейсы не существуют
+  class MultiBrokenImpl implements IMissing1, IMissing2 {
+    public method1(): void {}
+    public method2(): void {}
+  }
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Наследование от null/undefined типа
+   * Symbol: NullBase (класс, наследующий от null)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА
+   * Reason: null не является валидным базовым типом.
+   */
+  // @ts-expect-error - null не является базовым типом
+  class NullBase extends null {
+    public value: string = '';
+  }
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Наследование от типа объекта без конструктора
+   * Symbol: ObjectLiteralBase (класс, наследующий от объектного литерала)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА
+   * Reason: Объектные литералы не имеют конструктора и не могут быть базовыми классами.
+   */
+  const objectBase = { key: 'value' };
+  
+  // @ts-expect-error - объектный литерал не может быть базовым классом
+  class ObjectLiteralBase extends objectBase {
+    public extra: string = '';
+  }
+}
+
+// Импорт сломанных типов из отдельного файла для кросс-файловых тестов
+import {
+  BrokenHierarchyClass,
+  BrokenInterfaceRef,
+  BrokenChainClass
+} from './supertypes-deps/broken-hierarchy';
+
+{
+  /**
+   * NEGATIVE TEST CASE: Класс с циклической зависимостью из внешнего файла
+   * Symbol: BrokenHierarchyClass (из broken-hierarchy.ts)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА или неполный результат
+   * Reason: Класс имеет циклическую зависимость с другим классом в цепочке наследования.
+   */
+  // Использование сломанного класса для тестирования
+  const _brokenInstance: BrokenHierarchyClass = null as any;
+  console.log(_brokenInstance);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Интерфейс со ссылкой на несуществующий тип
+   * Symbol: BrokenInterfaceRef (из broken-hierarchy.ts)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА
+   * Reason: Интерфейс ссылается на тип, который не существует в проекте.
+   */
+  const _brokenRef: BrokenInterfaceRef = null as any;
+  console.log(_brokenRef);
+}
+
+{
+  /**
+   * NEGATIVE TEST CASE: Сломанная цепочка наследования
+   * Symbol: BrokenChainClass (из broken-hierarchy.ts)
+   * Command: typeHierarchy/supertypes
+   * Expected: ОШИБКА или частичный результат
+   * Reason: В цепочке наследования есть разрыв - промежуточный класс не существует.
+   */
+  const _brokenChain: BrokenChainClass = null as any;
+  console.log(_brokenChain);
+}

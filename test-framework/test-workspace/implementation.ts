@@ -31,6 +31,19 @@ import {
     BaseService,
 } from './implementation-deps/interfaces';
 
+// Импорты для негативных тестов (модуль существует, но содержит ошибки)
+import {
+    IConflictingTypes,
+    BrokenAbstractClass,
+    BrokenChildClass,
+    ISignatureMismatch,
+    IExtendsNonExistent,
+    IIncompleteInterface,
+    ICircularA,
+    ICircularB,
+    IGenericMismatch,
+} from './implementation-deps/broken-interfaces';
+
 // ============================================================================
 // ПОЗИТИВНЫЕ СЦЕНАРИИ: ИНТЕРФЕЙС С НЕСКОЛЬКИМИ РЕАЛИЗАЦИЯМИ
 // ============================================================================
@@ -798,3 +811,145 @@ export {
     IPlannedFeature,
     IFutureApi,
 };
+
+// ============================================================================
+// НЕГАТИВНЫЕ СЦЕНАРИИ С НЕВАЛИДНЫМ КОДОМ
+// ============================================================================
+
+/**
+ * NEGATIVE TEST CASE: Поиск реализаций для несуществующего интерфейса
+ * Symbol: INonExistentInterface
+ * Command: textDocument/implementation
+ * Expected: ОШИБКА - интерфейс не существует
+ * Reason: Интерфейс INonExistentInterface нигде не объявлен, LSP не сможет найти его реализации
+ */
+// @ts-expect-error - интерфейс не существует
+class BrokenImplementation implements INonExistentInterface {
+    doSomething(): void {
+        console.log('broken');
+    }
+}
+
+/**
+ * NEGATIVE TEST CASE: Поиск реализаций для интерфейса из сломанного модуля
+ * Symbol: IConflictingTypes (из broken-interfaces.ts)
+ * Command: textDocument/implementation
+ * Expected: ОШИБКА или ПУСТОЙ РЕЗУЛЬТАТ
+ * Reason: Интерфейс имеет конфликтующие типы методов, которые невозможно корректно реализовать
+ */
+// Используем уже импортированный IConflictingTypes
+// @ts-expect-error - невозможно реализовать интерфейс с конфликтующими типами
+class ConflictingImplementation implements IConflictingTypes {
+    // Невозможно создать метод, который возвращает и string и number одновременно
+    getValue(): string & number {
+        throw new Error('Impossible');
+    }
+}
+
+/**
+ * NEGATIVE TEST CASE: Поиск реализаций для абстрактного класса с ошибками в наследниках
+ * Symbol: BrokenAbstractClass (из broken-interfaces.ts)
+ * Command: textDocument/implementation
+ * Expected: ЧАСТИЧНЫЙ РЕЗУЛЬТАТ с ошибками
+ * Reason: Абстрактный класс имеет наследников с некорректной реализацией абстрактных методов
+ */
+// BrokenChildClass наследует от BrokenAbstractClass, но с ошибками
+const _brokenChildInstance = new BrokenChildClass();
+
+/**
+ * NEGATIVE TEST CASE: Поиск реализаций для типа, который не является интерфейсом/абстрактным классом
+ * Symbol: NotAnInterface (обычный класс)
+ * Command: textDocument/implementation
+ * Expected: ПУСТОЙ РЕЗУЛЬТАТ
+ * Reason: LSP method implementation предназначен только для интерфейсов и абстрактных классов
+ */
+class NotAnInterface {
+    method(): string {
+        return 'I am a regular class, not an interface';
+    }
+}
+
+// Попытка "реализовать" обычный класс - это не имеет смысла для implementation
+class TryingToImplement extends NotAnInterface {
+    method(): string {
+        return 'extended';
+    }
+}
+
+/**
+ * NEGATIVE TEST CASE: Реализация с несоответствующей сигнатурой метода
+ * Symbol: ISignatureMismatch (из broken-interfaces.ts)
+ * Command: textDocument/implementation
+ * Expected: ОШИБКА ТИПИЗАЦИИ
+ * Reason: Класс пытается реализовать интерфейс, но с неправильной сигнатурой метода
+ */
+// @ts-expect-error - сигнатура метода не совпадает с интерфейсом
+class WrongSignatureImplementation implements ISignatureMismatch {
+    // Интерфейс требует (input: string): number, а здесь (input: number): string
+    process(input: number): string {
+        return input.toString();
+    }
+    transform(data: number[]): string {
+        return data.join(',');
+    }
+}
+
+/**
+ * NEGATIVE TEST CASE: Интерфейс, расширяющий несуществующий интерфейс
+ * Symbol: IExtendsNonExistent (из broken-interfaces.ts)
+ * Command: textDocument/implementation
+ * Expected: ОШИБКА
+ * Reason: Интерфейс пытается расширить интерфейс, который не существует
+ */
+// @ts-expect-error - базовый интерфейс не существует
+class ExtendingBroken implements IExtendsNonExistent {
+    baseMethod(): void {}
+    ownMethod(): void {}
+}
+
+/**
+ * NEGATIVE TEST CASE: Реализация с пропущенными методами
+ * Symbol: IIncompleteInterface (из broken-interfaces.ts)
+ * Command: textDocument/implementation
+ * Expected: ОШИБКА
+ * Reason: Класс объявляет реализацию интерфейса, но не реализует все обязательные методы
+ */
+// @ts-expect-error - не все методы реализованы
+class IncompleteImplementation implements IIncompleteInterface {
+    methodA(): void {
+        console.log('only methodA implemented');
+    }
+    // methodB и methodC пропущены
+}
+
+/**
+ * NEGATIVE TEST CASE: Циклическая зависимость в иерархии
+ * Symbol: ICircularA, ICircularB (из broken-interfaces.ts)
+ * Command: textDocument/implementation
+ * Expected: ОШИБКА или ПУСТОЙ РЕЗУЛЬТАТ
+ * Reason: Интерфейсы имеют циклическую зависимость друг от друга
+ */
+// Циклические зависимости могут вызвать проблемы при анализе
+// @ts-ignore - игнорируем ошибки для демонстрации проблемы
+class CircularImplementation implements ICircularA {
+    methodFromA(): void {}
+    methodFromB(): void {}
+}
+
+/**
+ * NEGATIVE TEST CASE: Generic интерфейс с неправильными типовыми параметрами
+ * Symbol: IGenericMismatch<T, U> (из broken-interfaces.ts)
+ * Command: textDocument/implementation
+ * Expected: ОШИБКА ТИПИЗАЦИИ
+ * Reason: Реализация generic интерфейса с несовместимыми типами
+ */
+// @ts-expect-error - несовместимые типы
+class WrongGenericImplementation implements IGenericMismatch<string, number> {
+    transform(input: string): number {
+        return parseInt(input);
+    }
+    // Но обратное преобразование невозможно корректно
+    reverse(output: number): string {
+        return output.toFixed();
+    }
+}
