@@ -96,6 +96,10 @@ export class ConsoleReporter {
     // Выводим ошибку, если есть
     if (!result.success && result.error) {
       console.log(colorize(`  Error: ${result.error}`, 'red'));
+      // Выводим полный output для диагностики
+      if (result.output) {
+        console.log(colorize(`  Output: ${String(result.output)}`, 'yellow'));
+      }
     }
   }
 

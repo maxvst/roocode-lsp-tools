@@ -82,6 +82,14 @@ export class ResultValidator {
       }
     }
 
+    // Проверяем endsWith
+    if (expected.endsWith !== undefined) {
+      const result = this.validateEndsWith(output, expected.endsWith);
+      if (!result.passed) {
+        return result;
+      }
+    }
+
     // Проверяем matches (regex)
     if (expected.matches !== undefined) {
       const result = this.validateMatches(output, expected.matches);
@@ -124,6 +132,23 @@ export class ResultValidator {
       };
     }
     return { passed: true, matcher: 'contains', expected };
+  }
+
+  /**
+   * Проверка endsWith
+   */
+  private validateEndsWith(output: unknown, expected: string): ValidationResult {
+    const outputStr = String(output);
+    if (!outputStr.endsWith(expected)) {
+      return {
+        passed: false,
+        matcher: 'endsWith',
+        expected,
+        actual: outputStr.substring(0, 200),
+        error: `Output does not end with "${expected}"`,
+      };
+    }
+    return { passed: true, matcher: 'endsWith', expected };
   }
 
   /**

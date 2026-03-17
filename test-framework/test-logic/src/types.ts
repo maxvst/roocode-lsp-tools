@@ -70,6 +70,8 @@ export interface TestContext {
 export interface ExpectedResult {
   /** Результат должен содержать подстроку */
   contains?: string;
+  /** Результат должен оканчиваться строкой */
+  endsWith?: string;
   /** Результат должен соответствовать regex паттерну */
   matches?: string;
   /** Точное совпадение */

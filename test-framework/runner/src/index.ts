@@ -63,6 +63,9 @@ export class IsolatedRunner {
     console.log('[IsolatedRunner] Connecting to IPC...');
     await this.ipcClient.connect(15, 2000); // 15 попыток, 2 секунды между ними
 
+    // Дать LSP серверу время на полную индексацию workspace
+    await this.delay(8000);
+
     console.log('[IsolatedRunner] Started successfully');
   }
 
@@ -149,6 +152,13 @@ export class IsolatedRunner {
   kill(): void {
     this.ipcClient.disconnect();
     this.vscodeManager.kill();
+  }
+
+  /**
+   * Задержка выполнения
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 

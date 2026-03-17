@@ -73,9 +73,8 @@ export class VSCodeManager {
       JSON.stringify(settings, null, 2)
     );
 
-    // Отключаем все встроенные расширения кроме минимальных
+    // Отключаем приветственные экраны
     const argv = [
-      '--disable-extensions',
       '--skip-welcome',
       '--skip-release-notes',
       '--disable-workspace-trust',
@@ -144,14 +143,12 @@ export class VSCodeManager {
       const args = [
         '--user-data-dir', this.config.userDataDir,
         '--extensionDevelopmentPath', this.config.extensionDevelopmentPath,
-        '--disable-extensions', // Отключаем все расширения кроме dev
         '--skip-welcome',
         '--skip-release-notes',
         '--disable-workspace-trust',
         '--no-sandbox',
         '--disable-gpu-sandbox',
         '--new-window',
-        '--wait', // Ждать пока все extension активируются
         this.config.workspaceDir,
       ];
 

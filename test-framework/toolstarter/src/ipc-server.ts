@@ -4,6 +4,7 @@
  */
 
 import * as net from 'net';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import type {
   IPCMessage,
@@ -164,6 +165,17 @@ export class IPCServer {
     const registry = getGlobalRegistry();
 
     try {
+      // Получаем workspaceRoot из текущего workspace
+      const workspaceFolders = vscode.workspace.workspaceFolders;
+      const workspaceRoot = workspaceFolders && workspaceFolders.length > 0
+        ? workspaceFolders[0].uri.fsPath
+        : '';
+      
+      // Ждем готовности LSP сервера перед выполнением
+      if (workspaceRoot) {
+        await this.waitForLSPReady(workspaceRoot);
+      }
+      
       // Загружаем tool
       const loadResult = await registry.loadAndRegister(request.toolPath);
       
@@ -253,6 +265,56 @@ export class IPCServer {
       id: requestId,
       payload: { message },
     });
+  }
+
+  /**
+   * Ожидает готовности LSP сервера
+   * Проверяет готовность путем запроса определений из тестового файла
+   */
+  private async waitForLSPReady(workspaceRoot: string, timeout: number = 30000): Promise<void> {
+    const testFile = path.join(workspaceRoot, 'hello.ts');
+    const startTime = Date.now();
+    
+    this.log(`Waiting for LSP to be ready (workspace: ${workspaceRoot})`);
+    
+    while (Date.now() - startTime < timeout) {
+      try {
+        const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(testFile));
+        const result = await vscode.commands.executeCommand(
+          'vscode.executeDefinitionProvider',
+          doc.uri,
+          new vscode.Position(0, 0)
+        );
+        if (result !== undefined && result !== null) {
+          this.log('LSP is ready');
+          await this.warmupWorkspace(workspaceRoot);
+          return;
+        }
+      } catch (e) {
+        // Ignore errors during readiness check
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+    this.log('LSP readiness check timeout, proceeding anyway');
+  }
+
+  /**
+   * Прогревает LSP путем открытия всех TypeScript файлов в workspace
+   * Это необходимо для того, чтобы LSP знал точные позиции определений
+   */
+  private async warmupWorkspace(workspaceRoot: string): Promise<void> {
+    try {
+      const files = await vscode.workspace.findFiles('**/*.ts', '**/node_modules/**');
+      this.log(`Warming up ${files.length} TypeScript files...`);
+      
+      for (const file of files) {
+        await vscode.workspace.openTextDocument(file);
+      }
+      
+      this.log('Workspace warmup complete');
+    } catch (error) {
+      this.log(`Error during workspace warmup: ${error}`);
+    }
   }
 
   /**
