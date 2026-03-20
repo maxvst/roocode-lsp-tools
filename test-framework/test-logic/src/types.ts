@@ -104,8 +104,14 @@ export interface DurationMatcher {
 export interface TestExecutionResult {
   /** ID тест-кейса */
   testId: string;
+  /** Описание теста */
+  description?: string;
   /** Имя набора тестов */
   suiteName: string;
+  /** Имя tool */
+  toolName?: string;
+  /** Параметры, переданные в tool */
+  params?: Record<string, unknown>;
   /** Успешность */
   success: boolean;
   /** Результат выполнения tool */

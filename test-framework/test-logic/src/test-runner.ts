@@ -374,7 +374,10 @@ export class TestRunner {
 
       return {
         testId: testCase.definition.id,
+        description: testCase.definition.description,
         suiteName: testCase.suiteName,
+        toolName: testCase.definition.toolName,
+        params: testCase.definition.params,
         success: result.success && validation.passed,
         output: result.output,
         error: result.error || validation.error,
@@ -423,7 +426,10 @@ export class TestRunner {
   ): TestExecutionResult {
     return {
       testId: testCase.definition.id,
+      description: testCase.definition.description,
       suiteName: testCase.suiteName,
+      toolName: testCase.definition.toolName,
+      params: testCase.definition.params,
       success: false,
       error,
       duration: Date.now() - startTime,

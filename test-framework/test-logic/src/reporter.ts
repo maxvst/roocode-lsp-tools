@@ -80,26 +80,137 @@ export class ConsoleReporter {
    * Вывести результат отдельного теста
    */
   private printTestResult(result: TestExecutionResult): void {
-    const status = result.success
-      ? colorize('✓', 'green')
-      : colorize('✗', 'red');
-
-    const duration = colorize(`(${result.duration}ms)`, 'dim');
-
-    console.log(`${status} ${result.testId} ${duration}`);
-
-    // В verbose режиме выводим больше деталей
-    if (this.verbose) {
-      this.printDetails(result);
-    }
-
-    // Выводим ошибку, если есть
-    if (!result.success && result.error) {
-      console.log(colorize(`  Error: ${result.error}`, 'red'));
-      // Выводим полный output для диагностики
-      if (result.output) {
-        console.log(colorize(`  Output: ${String(result.output)}`, 'yellow'));
+    if (result.success) {
+      // Краткий вывод для успешных тестов
+      const status = colorize('✓', 'green');
+      const duration = colorize(`(${result.duration}ms)`, 'dim');
+      console.log(`${status} ${result.testId} ${duration}`);
+      
+      // В verbose режиме выводим детали даже для успешных
+      if (this.verbose) {
+        this.printDetails(result);
       }
+    } else {
+      // Детализированный вывод для failed тестов
+      this.printFailedTest(result);
+    }
+  }
+
+  /**
+   * Вывести детализированную информацию для failed теста
+   */
+  private printFailedTest(result: TestExecutionResult): void {
+    console.log();
+    console.log(colorize('❌ FAILED: ', 'red') + colorize(result.testId, 'bold'));
+    console.log(colorize('─'.repeat(50), 'dim'));
+    
+    // Description
+    if (result.description) {
+      console.log(colorize('   Description: ', 'cyan') + result.description);
+    }
+    
+    // Tool name
+    if (result.toolName) {
+      console.log(colorize('   Tool: ', 'cyan') + colorize(result.toolName, 'yellow'));
+    }
+    
+    // Parameters
+    if (result.params && Object.keys(result.params).length > 0) {
+      console.log(colorize('   Parameters:', 'cyan'));
+      for (const [key, value] of Object.entries(result.params)) {
+        const formattedValue = this.formatParameterValue(value);
+        console.log(colorize(`     - ${key}: `, 'dim') + formattedValue);
+      }
+    }
+    
+    // Expected vs Actual (из validation)
+    if (result.validation) {
+      this.printValidationDetails(result.validation);
+    }
+    
+    // Error message
+    if (result.error) {
+      console.log(colorize('   Error: ', 'red') + colorize(result.error, 'red'));
+    }
+    
+    // Output (фактический результат)
+    if (result.output !== undefined) {
+      console.log(colorize('   Output:', 'cyan'));
+      const outputStr = this.formatOutputMultiline(result.output);
+      console.log(colorize(outputStr, 'dim'));
+    }
+    
+    // Duration
+    console.log(colorize(`   Duration: `, 'dim') + colorize(`${result.duration}ms`, 'dim'));
+    console.log();
+  }
+
+  /**
+   * Вывести детали валидации (expected vs actual)
+   */
+  private printValidationDetails(validation: ValidationResult): void {
+    if (validation.matcher) {
+      console.log(colorize('   Matcher: ', 'cyan') + validation.matcher);
+    }
+    
+    if (validation.expected !== undefined) {
+      const expectedStr = this.formatParameterValue(validation.expected);
+      console.log(colorize('   Expected: ', 'green') + expectedStr);
+    }
+    
+    if (validation.actual !== undefined) {
+      const actualStr = this.formatParameterValue(validation.actual);
+      console.log(colorize('   Actual: ', 'red') + actualStr);
+    }
+  }
+
+  /**
+   * Форматировать значение параметра для вывода
+   */
+  private formatParameterValue(value: unknown): string {
+    if (value === null) {
+      return colorize('null', 'dim');
+    }
+    if (value === undefined) {
+      return colorize('undefined', 'dim');
+    }
+    if (typeof value === 'string') {
+      // Обрезаем длинные строки
+      if (value.length > 80) {
+        return `"${value.substring(0, 77)}..."`;
+      }
+      return `"${value}"`;
+    }
+    if (typeof value === 'object') {
+      try {
+        const json = JSON.stringify(value, null, 2);
+        // Обрезаем длинный JSON
+        if (json.length > 200) {
+          return json.substring(0, 197) + '...';
+        }
+        return json;
+      } catch {
+        return String(value);
+      }
+    }
+    return String(value);
+  }
+
+  /**
+   * Форматировать output в многострочном виде
+   */
+  private formatOutputMultiline(output: unknown): string {
+    if (typeof output === 'string') {
+      // Обрезаем очень длинные строки
+      if (output.length > 500) {
+        return output.substring(0, 497) + '...';
+      }
+      return output;
+    }
+    try {
+      return JSON.stringify(output, null, 2);
+    } catch {
+      return String(output);
     }
   }
 

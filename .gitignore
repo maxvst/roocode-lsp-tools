@@ -32,3 +32,8 @@ Thumbs.db
 
 # external projects
 3rd-projects/
+
+# roo-code
+docs/
+plans/
+.roo/

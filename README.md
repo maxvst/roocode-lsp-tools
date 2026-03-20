@@ -1,124 +1,81 @@
-# @roo-code/lsp-tools
+# 🔧 roocode-lsp-tools
 
-LSP (Language Server Protocol) Custom Tools для Roo-Code. Этот пакет предоставляет готовые инструменты для взаимодействия с LSP-серверами через VSCode API в формате `defineCustomTool`.
+**Набор LSP-инструментов для Roo-Code** — Custom Tools для навигации по коду с использованием Language Server Protocol через VSCode API.
 
-## Описание
+## 📋 Содержание
 
-Пакет предоставляет 5 LSP-инструментов в формате Custom Tools:
+- [Установленные инструменты](#-установленные-инструменты)
+- [Преимущества *_by_name инструментов](#-преимущества-by_name-инструментов)
+- [Документация инструментов](#-документация-инструментов)
+  - [go_to_definition](#go_to_definition)
+  - [go_to_definition_by_name](#go_to_definition_by_name)
+  - [go_to_declaration_by_name](#go_to_declaration_by_name)
+  - [go_to_type_definition_by_name](#go_to_type_definition_by_name)
+  - [tommorow](#tommorow)
+- [Структура проекта](#-структура-проекта)
+- [Установка и запуск](#-установка-и-запуск)
+- [Test Framework](#-test-framework)
+- [Планируемые инструменты](#-планируемые-инструменты)
+- [Ограничения](#-ограничения)
+- [Технологии и зависимости](#-технологии-и-зависимости)
 
-| Инструмент | Описание | VSCode API |
-|------------|----------|------------|
-| `go_to_definition` | Находит определение символа | `vscode.executeDefinitionProvider` |
-| `find_references` | Находит все ссылки на символ | `vscode.executeReferenceProvider` |
-| `get_hover` | Получает информацию о символе при наведении | `vscode.executeHoverProvider` |
-| `get_completions` | Получает автодополнения кода | `vscode.executeCompletionItemProvider` |
-| `get_document_symbols` | Получает дерево символов документа | `vscode.executeDocumentSymbolProvider` |
+---
 
-## ⚠️ Экспериментальная функция
+## 🛠️ Установленные инструменты
 
-Custom Tools — это экспериментальная функция Roo-Code. При включении инструменты автоматически одобряются — Roo не будет запрашивать разрешение перед выполнением. Включайте эту функцию только если доверяете коду инструментов.
+| Инструмент | Описание | Параметры |
+|------------|----------|-----------|
+| [`go_to_definition`](#go_to_definition) | Навигация к определению символа по координатам | `file_path`, `line`, `character` |
+| [`go_to_definition_by_name`](#go_to_definition_by_name) | Навигация к определению по имени символа | `file_path`, `symbol_name`, `symbol_kind?` |
+| [`go_to_declaration_by_name`](#go_to_declaration_by_name) | Навигация к объявлению (интерфейс/абстрактный класс) | `file_path`, `symbol_name`, `symbol_kind?` |
+| [`go_to_type_definition_by_name`](#go_to_type_definition_by_name) | Навигация к определению типа | `file_path`, `symbol_name`, `symbol_kind?` |
+| [`tommorow`](#tommorow) | Тестовый инструмент | нет |
 
-## Установка
+---
 
-### Шаг 1: Копирование инструментов
+## 🎯 Преимущества *_by_name инструментов
 
-Скопируйте файлы из директории `tools/` в ваш проект:
+### Проблема "LLM галлюцинаций" координат
 
-```bash
-# Создайте директорию для custom tools
-mkdir -p .roo/tools
+При использовании инструментов с координатами (`line`, `character`) LLM часто:
+- Указывает неверные номера строк
+- Неправильно вычисляет позицию символа
+- Не учитывает изменения в коде
 
-# Скопируйте нужные инструменты
-cp node_modules/@roo-code/lsp-tools/tools/*.ts .roo/tools/
-```
+### Решение: навигация по имени
 
-### Шаг 2: Установка зависимостей
+Инструменты `*_by_name` позволяют найти символ по его имени, что:
+- ✅ Устраняет ошибки в координатах
+- ✅ Работает независимо от позиции символа
+- ✅ Более естественно для LLM (работа с семантикой, а не позициями)
 
-```bash
-# Вариант 1: Установка в корне проекта (рекомендуется)
-# Roo-Code автоматически найдёт пакет в node_modules проекта
-npm install @roo-code/types
+### Сравнение подходов
 
-# Вариант 2: Установка в .roo/tools/ (опционально)
-cd .roo/tools
-npm init -y
-npm install @roo-code/types
-```
+| Критерий | По координатам | По имени |
+|----------|----------------|----------|
+| Точность | ❌ Зависит от LLM | ✅ Гарантирована LSP |
+| Устойчивость к изменениям | ❌ Ломается при редактировании | ✅ Работает всегда |
+| Естественность для LLM | ❌ Требует вычислений | ✅ Семантический подход |
+| Скорость | ✅ Прямой доступ | ⚠️ Требует поиска |
 
-### Зависимости
+---
 
-LSP-инструменты используют `@roo-code/types` — пакет предоставляет `defineCustomTool` и `parametersSchema` (Zod).
+## 📖 Документация инструментов
 
-**Важно:** Roo-Code автоматически резолвит этот импорт через `nodePaths`:
-1. Ищет в `.roo/tools/node_modules/` (если установлен локально)
-2. Ищет в `node_modules/` корня проекта
+### go_to_definition
 
-Достаточно установить пакет в корне проекта:
-```bash
-npm install @roo-code/types
-```
+Находит определение символа в указанной позиции курсора.
 
-Другие зависимости:
-- `vscode` — предоставляется VSCode Extension API (установка не требуется)
-- `path` — встроенный модуль Node.js
+**Параметры:**
 
-### Шаг 3: Включение Custom Tools
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `file_path` | string | ✅ | Путь к файлу (относительно корня workspace) |
+| `line` | number | ✅ | Номер строки (1-based, как в редакторе) |
+| `character` | number | ✅ | Позиция символа (1-based, как в редакторе) |
 
-1. Откройте настройки Roo-Code (иконка шестерёнки в правом верхнем углу)
-2. Перейдите на вкладку "Experimental"
-3. Включите "Enable custom tools"
+**Пример вызова:**
 
-## Структура проекта
-
-```
-roo-code-lsp-tools/
-├── tools/                      # Custom Tools для копирования в .roo/tools/
-│   ├── go_to_definition.ts     # Навигация к определению
-│   ├── find_references.ts      # Поиск ссылок
-│   ├── get_hover.ts            # Информация при наведении
-│   ├── get_completions.ts      # Автодополнения
-│   └── get_document_symbols.ts # Символы документа
-├── package.json                # Метаданные пакета
-├── .gitignore
-└── README.md
-```
-
-## Использование
-
-### Формат Custom Tool
-
-Каждый инструмент использует формат `defineCustomTool`:
-
-```typescript
-import { parametersSchema as z, defineCustomTool } from "@roo-code/types"
-import * as vscode from "vscode"
-import path from "path"
-
-export default defineCustomTool({
-  name: "go_to_definition",
-  description: "Find the definition of a symbol...",
-  parameters: z.object({
-    file_path: z.string().describe("Path to the file"),
-    line: z.number().describe("1-based line number"),
-    character: z.number().describe("1-based character position"),
-  }),
-  async execute({ file_path, line, character }, context) {
-    // context.task.cwd - рабочая директория
-    // Возвращается строка - результат для LLM
-    return "Result string"
-  }
-})
-```
-
-### Примеры использования в Roo-Code
-
-#### go_to_definition
-
-```
-Найди определение функции processData в файле src/processor.ts на строке 15
-```
-
-Roo вызовет:
 ```json
 {
   "name": "go_to_definition",
@@ -130,308 +87,449 @@ Roo вызовет:
 }
 ```
 
-#### find_references
-
-```
-Найди все места, где используется класс UserService
-```
-
-#### get_hover
-
-```
-Какой тип у переменной config на строке 25 в файле src/config.ts?
-```
-
-#### get_completions
-
-```
-Какие методы доступны у объекта user на строке 42?
-```
-
-#### get_document_symbols
-
-```
-Покажи структуру файла src/api.ts
-```
-
-## API Документация
-
-### go_to_definition
-
-Находит определение символа в указанной позиции.
-
-**Параметры:**
-| Параметр | Тип | Описание |
-|----------|-----|----------|
-| `file_path` | string | Путь к файлу (относительно корня workspace) |
-| `line` | number | Номер строки (1-based, как в редакторе) |
-| `character` | number | Позиция символа (1-based, как в редакторе) |
-
 **Пример результата:**
+
 ```
 ✅ Found 1 definition:
 
 **Definition 1:**
-  File: /path/to/definition.ts
+  File: src/utils/processor.ts
   Position: Line 25, Character 10
 ```
 
 ---
 
-### find_references
+### go_to_definition_by_name
 
-Находит все ссылки на символ в проекте.
-
-**Параметры:**
-| Параметр | Тип | Описание |
-|----------|-----|----------|
-| `file_path` | string | Путь к файлу |
-| `line` | number | Номер строки (1-based) |
-| `character` | number | Позиция символа (1-based) |
-
-**Пример результата:**
-```
-✅ Found 15 references in 4 files:
-
-**/path/to/file1.ts** (8 references)
-  1. Line 10, Character 5
-  2. Line 25, Character 12
-  ...
-
-**/path/to/file2.ts** (7 references)
-  1. Line 5, Character 8
-  ...
-```
-
----
-
-### get_hover
-
-Получает информацию о символе при наведении (тип, документация).
+Находит определение символа по его имени. Выполняет поиск символа в документе, затем переходит к его определению.
 
 **Параметры:**
-| Параметр | Тип | Описание |
-|----------|-----|----------|
-| `file_path` | string | Путь к файлу |
-| `line` | number | Номер строки (1-based) |
-| `character` | number | Позиция символа (1-based) |
 
-**Пример результата:**
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `file_path` | string | ✅ | Путь к файлу для поиска символа |
+| `symbol_name` | string | ✅ | Имя символа для поиска |
+| `symbol_kind` | string | ❌ | Тип символа для фильтрации (см. SymbolKind) |
+
+**Поддерживаемые SymbolKind (26 типов):**
+
 ```
-✅ Hover information:
-
-```typescript
-function processData(input: string): ProcessedData
-```
-
-*Applies to: Lines 10-10, Characters 5-25*
-```
-
----
-
-### get_completions
-
-Получает список автодополнений в указанной позиции.
-
-**Параметры:**
-| Параметр | Тип | Описание |
-|----------|-----|----------|
-| `file_path` | string | Путь к файлу |
-| `line` | number | Номер строки (1-based) |
-| `character` | number | Позиция символа (1-based) |
-| `trigger_character` | string? | Опционально: символ-триггер (например, '.') |
-
-**Пример результата:**
-```
-✅ Found 25 completion suggestions:
-
-**Method** (10)
-  - `processData` - Process the input data
-  - `validateInput` - Validate user input
-  ...
-
-**Variable** (8)
-  - `config` - Configuration object
-  - `state` - Current state
-  ...
+File, Module, Namespace, Package, Class, Method, Property, Field,
+Constructor, Enum, Interface, Function, Variable, Constant, String,
+Number, Boolean, Array, Object, Key, Null, EnumMember, Struct,
+Event, Operator, TypeParameter
 ```
 
----
+**Пример вызова:**
 
-### get_document_symbols
-
-Получает дерево символов документа (классы, функции, переменные).
-
-**Параметры:**
-| Параметр | Тип | Описание |
-|----------|-----|----------|
-| `file_path` | string | Путь к файлу |
-
-**Пример результата:**
-```
-✅ Found 12 symbols in document:
-
-- **MyClass** (Class) [Line 10]
-  • **constructor** (Constructor) [Line 12]
-  • **processData** (Method) [Line 20]
-  • **validate** (Method) [Line 35]
-- **helperFunction** (Function) [Line 50]
-- **CONFIG** (Constant) [Line 60]
-```
-
-## Troubleshooting
-
-### "LSP server not available"
-
-**Проблема:** Инструмент возвращает ошибку о недоступности LSP сервера.
-
-**Решения:**
-1. Убедитесь, что для данного типа файлов установлен и активен соответствующий LSP сервер
-2. Откройте файл в редакторе перед вызовом инструмента
-3. Проверьте, что LSP сервер запущен (см. Output panel)
-
-### "File not found"
-
-**Проблема:** Файл не найден.
-
-**Решения:**
-1. Используйте путь относительно корня workspace
-2. Проверьте правильность написания пути
-3. Убедитесь, что файл существует
-
-### "No definition/references found"
-
-**Проблема:** Инструмент не находит определения или ссылки.
-
-**Решения:**
-1. Убедитесь, что позиция указывает на символ (не на пробел или комментарий)
-2. Проверьте, что LSP сервер поддерживает данную функциональность
-3. Для некоторых языков требуется индексация проекта
-
-### Позиции 1-based vs 0-based
-
-**Важно:** Все позиции в API используют 1-based нумерацию (как в редакторе).
-
-```typescript
-// Правильно (1-based, как в редакторе)
-{ line: 10, character: 5 }
-
-// Неправильно (0-based)
-{ line: 9, character: 4 }
-```
-
-### Инструменты не появляются в Roo
-
-**Проблема:** Roo не видит custom tools.
-
-**Решения:**
-1. Убедитесь, что включена опция "Enable custom tools" в Experimental настройках
-2. Выполните команду "Refresh Custom Tools" через Command Palette
-3. Перезагрузите окно VSCode (Developer: Reload Window)
-
-## Ограничения
-
-- **Только строковые результаты:** Инструменты должны возвращать строки (ограничение протокола Roo)
-- **Без интерактивного ввода:** Инструменты не могут запрашивать ввод у пользователя во время выполнения
-- **Автоодобрение:** При включенной функции инструменты выполняются без подтверждения
-
-## Разработка
-
-### Локальное тестирование
-
-1. Скопируйте файлы из `tools/` в `.roo/tools/` вашего тестового проекта
-2. Установите зависимости: `npm install @roo-code/types` (в корне проекта)
-3. Включите Custom Tools в настройках Roo-Code
-4. Выполните "Refresh Custom Tools"
-
-### Добавление нового инструмента
-
-Создайте новый файл в `tools/` по шаблону:
-
-```typescript
-import { parametersSchema as z, defineCustomTool } from "@roo-code/types"
-import * as vscode from "vscode"
-import path from "path"
-
-export default defineCustomTool({
-  name: "my_lsp_tool",
-  description: "Description of what the tool does",
-  parameters: z.object({
-    file_path: z.string().describe("Path to the file"),
-    // другие параметры...
-  }),
-  async execute({ file_path }, context) {
-    const workspaceRoot = context.task.cwd
-    const fullPath = path.join(workspaceRoot, file_path)
-    
-    try {
-      // Выполнение VSCode API
-      const result = await vscode.commands.executeCommand(...)
-      return `✅ Result: ${formatResult(result)}`
-    } catch (error) {
-      return `❌ Error: ${error instanceof Error ? error.message : String(error)}`
-    }
+```json
+{
+  "name": "go_to_definition_by_name",
+  "parameters": {
+    "file_path": "src/services/UserService.ts",
+    "symbol_name": "UserService",
+    "symbol_kind": "Class"
   }
-})
+}
 ```
 
-## Тестирование Custom Tools
+**Пример результата:**
 
-Проект включает тестовый фреймворк для интеграционного тестирования custom tools в изолированной среде VSCode.
-
-### Структура тестового фреймворка
-
-```
-test-framework/
-├── runner/              # Isolated Runner - запуск VSCode и IPC
-├── toolstarter/         # VSCode Extension - мок RooCode
-├── test-logic/          # Test Logic Layer - выполнение тестов
-├── test-cases/          # YAML тест-кейсы
-│   ├── test-tomorrow.yaml
-│   └── examples/
-├── cli.ts               # CLI интерфейс
-├── run-test.sh          # Скрипт быстрого запуска
-└── ARCHITECTURE.md      # Документация архитектуры
+```json
+{
+  "locations": [
+    {
+      "uri": "file:///workspace/src/services/UserService.ts",
+      "range": {
+        "start": { "line": 5, "character": 0 },
+        "end": { "line": 50, "character": 1 }
+      }
+    }
+  ]
+}
 ```
 
-### Быстрый старт
+---
+
+### go_to_declaration_by_name
+
+Находит объявление символа (интерфейс или абстрактный класс), от которого наследуется или который реализует указанный символ.
+
+**Параметры:**
+
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `file_path` | string | ✅ | Путь к файлу для поиска символа |
+| `symbol_name` | string | ✅ | Имя символа для поиска |
+| `symbol_kind` | string | ❌ | Тип символа для фильтрации |
+
+**Пример вызова:**
+
+```json
+{
+  "name": "go_to_declaration_by_name",
+  "parameters": {
+    "file_path": "src/services/UserService.ts",
+    "symbol_name": "UserService",
+    "symbol_kind": "Class"
+  }
+}
+```
+
+**Пример результата:**
+
+```json
+{
+  "locations": [
+    {
+      "uri": "file:///workspace/src/interfaces/IUserService.ts",
+      "range": {
+        "start": { "line": 3, "character": 0 },
+        "end": { "line": 20, "character": 1 }
+      }
+    }
+  ]
+}
+```
+
+**Примечание:** Если класс не реализует интерфейс и не наследуется от абстрактного класса, LSP сервер может не вернуть декларацию.
+
+---
+
+### go_to_type_definition_by_name
+
+Находит определение типа переменной, параметра, свойства или возвращаемого значения.
+
+**Параметры:**
+
+| Параметр | Тип | Обязательный | Описание |
+|----------|-----|--------------|----------|
+| `file_path` | string | ✅ | Путь к файлу для поиска символа |
+| `symbol_name` | string | ✅ | Имя символа для поиска |
+| `symbol_kind` | string | ❌ | Тип символа для фильтрации |
+
+**Пример вызова:**
+
+```json
+{
+  "name": "go_to_type_definition_by_name",
+  "parameters": {
+    "file_path": "src/handlers/UserHandler.ts",
+    "symbol_name": "user",
+    "symbol_kind": "Variable"
+  }
+}
+```
+
+**Пример результата:**
+
+```json
+{
+  "locations": [
+    {
+      "uri": "file:///workspace/src/models/User.ts",
+      "range": {
+        "start": { "line": 0, "character": 0 },
+        "end": { "line": 15, "character": 1 }
+      }
+    }
+  ]
+}
+```
+
+**Примечание:** Для примитивных типов (`string`, `number`, `boolean`), union/intersection типов LSP может не вернуть определение типа.
+
+---
+
+### tommorow
+
+Тестовый инструмент для проверки работоспособности фреймворка.
+
+**Параметры:** нет
+
+**Пример вызова:**
+
+```json
+{
+  "name": "tommorow",
+  "parameters": {}
+}
+```
+
+---
+
+## 📁 Структура проекта
+
+```
+roocode-lsp-tools/
+├── src/                                    # Исходный код инструментов
+│   ├── go_to_definition.ts                 # Навигация по координатам
+│   ├── go_to_definition_by_name.ts         # Навигация к определению по имени
+│   ├── go_to_declaration_by_name.ts        # Навигация к объявлению по имени
+│   ├── go_to_type_definition_by_name.ts    # Навигация к типу по имени
+│   ├── test.ts                             # Тестовый инструмент (tommorow)
+│   ├── package.json                        # Зависимости src/
+│   └── tsconfig.json                       # Конфигурация TypeScript
+│
+├── test-framework/                         # Тестовый фреймворк
+│   ├── runner/                             # Isolated Runner
+│   │   └── src/
+│   │       ├── index.ts                    # Точка входа
+│   │       ├── ipc-client.ts               # IPC клиент
+│   │       ├── vscode-manager.ts           # Управление VSCode
+│   │       └── types.ts                    # Типы
+│   │
+│   ├── toolstarter/                        # VSCode Extension
+│   │   └── src/
+│   │       ├── extension.ts                # Точка входа расширения
+│   │       ├── ipc-server.ts               # IPC сервер (порт 9234)
+│   │       ├── tool-loader.ts              # Загрузчик инструментов
+│   │       ├── tool-registry.ts            # Реестр инструментов
+│   │       └── validator.ts                # Валидация параметров
+│   │
+│   ├── test-logic/                         # Логика тестирования
+│   │   └── src/
+│   │       ├── index.ts                    # Экспорт модуля
+│   │       ├── test-case-loader.ts         # Загрузка YAML тест-кейсов
+│   │       ├── test-runner.ts              # Выполнение тестов
+│   │       ├── reporter.ts                 # Формирование отчётов
+│   │       └── types.ts                    # Типы
+│   │
+│   ├── test-cases/                         # YAML тест-кейсы
+│   │   ├── test-go-to-definition.yaml      # 1 активный тест
+│   │   ├── test-go-to-definition-by-name.yaml    # 9 активных тестов
+│   │   ├── test-go-to-declaration-by-name.yaml   # 2 активных, ~20 отключенных
+│   │   ├── test-go-to-type-definition-by-name.yaml # 30 активных, ~10 отключенных
+│   │   └── test-tomorrow.yaml              # 3 активных теста
+│   │
+│   ├── test-workspace/                     # TypeScript файлы для тестов
+│   │   ├── definition.ts
+│   │   ├── declaration.ts
+│   │   ├── typeDefinition.ts
+│   │   ├── implementation.ts
+│   │   └── ...                             # И другие файлы
+│   │
+│   ├── cli.ts                              # CLI интерфейс
+│   ├── run-test.sh                         # Скрипт запуска
+│   └── ARCHITECTURE.md                     # Документация архитектуры
+│
+├── docs/                                   # Документация
+│   └── go_to_definition_redesign.md
+│
+├── plans/                                  # Планы разработки
+│   └── go_to_definition_by_name_plan.md
+│
+├── .roo/                                   # Конфигурация Roo-Code
+├── README.md                               # Этот файл
+└── .gitignore
+```
+
+---
+
+## 🚀 Установка и запуск
+
+### Требования
+
+- **Node.js** >= 18.x
+- **VSCode** >= 1.85.0
+- **TypeScript** >= 5.3.0
+
+### Установка зависимостей
 
 ```bash
-# Сборка фреймворка
-cd test-framework && npm run build
+# Установка зависимостей для src/
+cd src && npm install
 
-# Запуск тестов через скрипт
-./run-test.sh test-cases/test-tomorrow.yaml
+# Установка зависимостей для test-framework
+cd ../test-framework && npm install
+cd runner && npm install
+cd ../toolstarter && npm install
+cd ../test-logic && npm install
+```
 
-# Запуск через CLI
-node cli.js test --verbose test-cases/test-tomorrow.yaml
+### Сборка
+
+```bash
+# Сборка инструментов
+cd src && npm run build
+
+# Сборка test-framework
+cd ../test-framework && npm run build
+```
+
+### Использование в Roo-Code
+
+1. Скопируйте нужные инструменты из `src/` в `.roo/tools/` вашего проекта:
+
+```bash
+mkdir -p .roo/tools
+cp src/go_to_definition_by_name.ts .roo/tools/
+cp src/go_to_declaration_by_name.ts .roo/tools/
+cp src/go_to_type_definition_by_name.ts .roo/tools/
+```
+
+2. Установите зависимости в корне проекта:
+
+```bash
+npm install @roo-code/types
+```
+
+3. Включите Custom Tools в Roo-Code:
+   - Откройте настройки Roo-Code
+   - Перейдите на вкладку "Experimental"
+   - Включите "Enable custom tools"
+
+---
+
+## 🧪 Test Framework
+
+Проект включает специализированный тестовый фреймворк для интеграционного тестирования custom tools в изолированной среде VSCode.
+
+### Архитектура
+
+```
+┌─────────────────┐     IPC (порт 9234)     ┌─────────────────┐
+│     Runner      │ ◄─────────────────────► │   ToolStarter   │
+│  (Node.js CLI)  │                         │ (VSCode Ext)    │
+└────────┬────────┘                         └────────┬────────┘
+         │                                           │
+         │ Загружает                                 │ Выполняет
+         ▼                                           ▼
+┌─────────────────┐                         ┌─────────────────┐
+│   Test Logic    │                         │   Custom Tool   │
+│  (YAML → Test)  │                         │  (LSP запрос)   │
+└─────────────────┘                         └─────────────────┘
+```
+
+### Компоненты
+
+| Компонент | Назначение |
+|-----------|------------|
+| `runner/` | Запуск изолированного VSCode, IPC клиент |
+| `toolstarter/` | VSCode extension, эмуляция RooCode, IPC сервер |
+| `test-logic/` | Загрузка YAML тест-кейсов, валидация, отчёты |
+| `test-cases/` | YAML файлы с тестовыми сценариями |
+| `test-workspace/` | TypeScript файлы для тестирования LSP |
+
+### Запуск тестов
+
+```bash
+# Через скрипт
+cd test-framework
+./run-test.sh test-cases/test-go-to-definition-by-name.yaml
+
+# Через CLI
+node cli.js test --verbose test-cases/test-go-to-type-definition-by-name.yaml
+
+# Запуск всех тестов
+node cli.js test --verbose test-cases/*.yaml
 ```
 
 ### Формат тест-кейса
 
 ```yaml
-name: "My Tool Test"
-description: "Тестирование custom tool"
+name: "Test Go To Definition By Name"
+description: "Тестирование навигации по имени"
 
 testCases:
-  - id: "basic-test"
-    description: "Базовый тест"
-    toolPath: "../src/my-tool.ts"
-    toolName: "my_tool"
-    params: {}
+  - id: "find-class-definition"
+    description: "Поиск определения класса"
+    enabled: true
+    toolPath: "../src/go_to_definition_by_name.ts"
+    toolName: "go_to_definition_by_name"
+    params:
+      file_path: "test-workspace/definition.ts"
+      symbol_name: "MyClass"
+      symbol_kind: "Class"
     expected:
       success: true
-      contains: "ожидаемый текст"
+      contains: "definition.ts"
 ```
 
-### Документация
+### Статистика тестов
 
-Подробная документация доступна в [`test-framework/ARCHITECTURE.md`](test-framework/ARCHITECTURE.md):
-- Архитектура фреймворка
-- Quick Start гайд
-- Troubleshooting
-- Примеры использования
+| Файл | Активных | Отключенных |
+|------|----------|-------------|
+| `test-go-to-definition.yaml` | 1 | 0 |
+| `test-go-to-definition-by-name.yaml` | 9 | 0 |
+| `test-go-to-declaration-by-name.yaml` | 2 | ~20 |
+| `test-go-to-type-definition-by-name.yaml` | 30 | ~10 |
+| `test-tomorrow.yaml` | 3 | 0 |
 
-## Лицензия
+Подробная документация: [`test-framework/ARCHITECTURE.md`](test-framework/ARCHITECTURE.md)
+
+---
+
+## 📋 Планируемые инструменты
+
+| Инструмент | Описание | Статус |
+|------------|----------|--------|
+| `find_references` | Поиск всех ссылок на символ | 🔲 Planned |
+| `get_hover` | Информация о символе при наведении | 🔲 Planned |
+| `get_completions` | Автодополнения кода | 🔲 Planned |
+| `get_document_symbols` | Дерево символов документа | 🔲 Planned |
+| `find_references_by_name` | Поиск ссылок по имени символа | 🔲 Planned |
+| `get_call_hierarchy` | Иерархия вызовов | 🔲 Planned |
+| `get_type_hierarchy` | Иерархия типов | 🔲 Planned |
+
+---
+
+## ⚠️ Ограничения
+
+### LSP-зависимость
+
+- LSP сервер может не возвращать декларации для некоторых типов символов
+- Для корректной работы требуется активный LSP сервер для соответствующего языка
+- Некоторые возможности зависят от конкретной реализации LSP сервера
+
+### Типы данных
+
+- **Union/Intersection типы** — LSP может не вернуть определение типа
+- **Примитивные типы** (`string`, `number`, `boolean`, `null`, `undefined`) — не имеют определений
+- **Generic типы** — могут возвращать определение дженерика, а не конкретного типа
+
+### Формат результатов
+
+- Инструменты возвращают строковые результаты (ограничение протокола Roo)
+- Без интерактивного ввода во время выполнения
+- При включённой функции Custom Tools инструменты выполняются без подтверждения
+
+---
+
+## 📦 Технологии и зависимости
+
+### Основные зависимости (src/package.json)
+
+| Пакет | Версия | Назначение |
+|-------|--------|------------|
+| `@roo-code/types` | `^1.115.0` | `defineCustomTool`, `parametersSchema` (Zod) |
+| `@types/vscode` | `^1.85.0` | Типы VSCode Extension API |
+| `@types/node` | `^20.10.0` | Типы Node.js |
+| `typescript` | `^5.3.0` | Компилятор TypeScript |
+
+### VSCode API
+
+Инструменты используют следующие VSCode commands:
+
+| Command | Инструмент |
+|---------|------------|
+| `vscode.executeDefinitionProvider` | `go_to_definition` |
+| `vscode.executeDocumentSymbolProvider` | `*_by_name` (поиск символа) |
+| `vscode.executeDeclarationProvider` | `go_to_declaration_by_name` |
+| `vscode.executeTypeDefinitionProvider` | `go_to_type_definition_by_name` |
+
+---
+
+## 📄 Лицензия
 
 MIT
+
+---
+
+## 🤝 Вклад в проект
+
+1. Форкните репозиторий
+2. Создайте ветку для функции (`git checkout -b feature/amazing-feature`)
+3. Закоммитьте изменения (`git commit -m 'Add amazing feature'`)
+4. Запушьте ветку (`git push origin feature/amazing-feature`)
+5. Откройте Pull Request

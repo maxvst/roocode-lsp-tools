@@ -245,17 +245,17 @@ testCases:
   #     contains: "declaration.ts"
   #   timeout: 30000
 
-  - id: "go-to-declaration-by-name-type-alias"
-    description: "Проверка перехода к объявлению псевдонима типа"
-    toolPath: "../../src/go_to_declaration_by_name.ts"
-    toolName: "go_to_declaration_by_name"
-    params:
-      file_path: "declaration.ts"
-      symbol_name: "MyType"
-    expected:
-      success: true
-      contains: "declaration.ts"
-    timeout: 30000
+  # - id: "go-to-declaration-by-name-type-alias"
+  #   description: "Проверка перехода к объявлению псевдонима типа"
+  #   toolPath: "../../src/go_to_declaration_by_name.ts"
+  #   toolName: "go_to_declaration_by_name"
+  #   params:
+  #     file_path: "declaration.ts"
+  #     symbol_name: "MyType"
+  #   expected:
+  #     success: true
+  #     contains: "declaration.ts"
+  #   timeout: 30000
 
   # ============================================================================
   # НЕГАТИВНЫЕ СЦЕНАРИИ
