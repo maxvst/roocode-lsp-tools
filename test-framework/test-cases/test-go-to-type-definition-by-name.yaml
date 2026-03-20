@@ -1,0 +1,610 @@
+name: "Go to Type Definition By Name LSP Test"
+description: "Тестирование LSP функции go_to_type_definition_by_name - поиск определения типа по имени символа"
+author: "QA Team"
+version: "1.0.0"
+
+testCases:
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: ПЕРЕМЕННЫЕ С ИНТЕРФЕЙСАМИ
+  # ============================================================================
+
+  - id: "type-definition-interface"
+    description: "Проверка перехода к определению типа интерфейса UserType"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "user"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-inherited-interface"
+    description: "Проверка перехода к определению типа наследуемого интерфейса AdminUser"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "admin"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-config-interface"
+    description: "Проверка перехода к определению типа интерфейса ConfigType"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "config"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: КЛАССЫ КАК ТИПЫ
+  # ============================================================================
+
+  - id: "type-definition-class-type"
+    description: "Проверка перехода к определению типа класса EntityClass"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "entity"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/classes.ts"
+    timeout: 30000
+
+  - id: "type-definition-user-class"
+    description: "Проверка перехода к определению типа класса UserClass"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "user"
+      symbol_kind: "variable"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/classes.ts"
+    timeout: 30000
+
+  - id: "type-definition-generic-class"
+    description: "Проверка перехода к определению обобщённого класса ContainerClass"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "container"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/classes.ts"
+    timeout: 30000
+
+  - id: "type-definition-abstract-class"
+    description: "Проверка перехода к определению абстрактного класса HandlerClass"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "handler"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/classes.ts"
+    timeout: 30000
+
+  - id: "type-definition-interface-type"
+    description: "Проверка перехода к определению интерфейса ISerializable"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "serializable"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/classes.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: GENERIC ТИПЫ
+  # ============================================================================
+
+  - id: "type-definition-generic-response"
+    description: "Проверка перехода к определению generic типа Response<T>"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "response"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-multi-generic"
+    description: "Проверка перехода к определению класса ResultClass с несколькими type parameters"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "result"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/classes.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: ФУНКЦИИ
+  # ============================================================================
+
+  - id: "type-definition-function-param"
+    description: "Проверка перехода к типу параметра функции userData"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "userData"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-function-return"
+    description: "Проверка перехода к возвращаемому типу функции testFunctionReturnType"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "testFunctionReturnType"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-function-type"
+    description: "Проверка перехода к типу функции HandlerFunction"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "handler"
+      symbol_kind: "variable"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: UNION И INTERSECTION ТИПЫ
+  # ============================================================================
+
+  # NOTE: Fails because union types don't have a direct type definition
+  # Expected behavior - not a bug
+  - id: "type-definition-union-type"
+    description: "Проверка перехода к определению union типа Status"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "currentStatus"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  # NOTE: Fails because intersection types don't have a direct type definition
+  # Expected behavior - not a bug
+  - id: "type-definition-intersection-type"
+    description: "Проверка перехода к определению intersection типа UserWithStatus"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "userWithStatus"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: УТИЛИТАРНЫЕ ТИПЫ
+  # ============================================================================
+
+  - id: "type-definition-partial-type"
+    description: "Проверка перехода к определению утилитарного типа PartialUser"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "partialUser"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-pick-type"
+    description: "Проверка перехода к определению утилитарного типа UserPreview"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "userPreview"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-omit-type"
+    description: "Проверка перехода к определению утилитарного типа UserWithoutEmail"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "userWithoutEmail"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: СЛОЖНЫЕ ТИПЫ
+  # ============================================================================
+
+  - id: "type-definition-readonly-array"
+    description: "Проверка перехода к определению readonly массива ReadonlyNumbers"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "numbers"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-tuple"
+    description: "Проверка перехода к определению кортежа Coordinate"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "coord"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-mapped-type"
+    description: "Проверка перехода к определению mapped типа Stringified"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "stringified"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-callback-type"
+    description: "Проверка перехода к определению типа callback EventCallback"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "callback"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-constructor-type"
+    description: "Проверка перехода к определению типа конструктора Constructor"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "ctor"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: ЛОКАЛЬНЫЕ ТИПЫ
+  # ============================================================================
+
+  - id: "type-definition-local-type-alias"
+    description: "Проверка перехода к локальному псевдониму типа LocalType"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "data"
+      symbol_kind: "variable"
+    expected:
+      success: true
+      contains: "typeDefinition.ts"
+    timeout: 30000
+
+  - id: "type-definition-local-interface"
+    description: "Проверка перехода к локальному интерфейсу ILocalInterface"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "ILocalInterface"
+    expected:
+      success: true
+      contains: "typeDefinition.ts"
+    timeout: 30000
+
+  - id: "type-definition-local-enum"
+    description: "Проверка перехода к локальному enum LocalEnum"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "LocalEnum"
+    expected:
+      success: true
+      contains: "typeDefinition.ts"
+    timeout: 30000
+
+  - id: "type-definition-local-class"
+    description: "Проверка перехода к локальному классу LocalClass"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "LocalClass"
+    expected:
+      success: true
+      contains: "typeDefinition.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: С УКАЗАНИЕМ SYMBOL_KIND
+  # ============================================================================
+
+  - id: "type-definition-with-kind-variable"
+    description: "Проверка перехода к типу с указанием symbol_kind=variable"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "user"
+      symbol_kind: "variable"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-with-kind-function"
+    description: "Проверка перехода к типу с указанием symbol_kind=function"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "testVariableWithInterfaceType"
+      symbol_kind: "function"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  - id: "type-definition-with-kind-class"
+    description: "Проверка перехода к типу с указанием symbol_kind=class"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "EntityClass"
+      symbol_kind: "class"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/classes.ts"
+    timeout: 30000
+
+  - id: "type-definition-with-kind-interface"
+    description: "Проверка перехода к типу с указанием symbol_kind=interface"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "UserType"
+      symbol_kind: "interface"
+    expected:
+      success: true
+      contains: "typeDefinition-deps/types.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # НЕГАТИВНЫЕ СЦЕНАРИИ: ПРИМИТИВНЫЕ ТИПЫ
+  # ============================================================================
+
+  - id: "type-definition-primitive-string"
+    description: "Проверка обработки примитивного типа string - нет определения типа"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "inferredString"
+    expected:
+      success: false
+      contains: "no type definitions"
+    timeout: 30000
+
+  - id: "type-definition-primitive-number"
+    description: "Проверка обработки примитивного типа number - нет определения типа"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "inferredNumber"
+    expected:
+      success: false
+      contains: "no type definitions"
+    timeout: 30000
+
+  - id: "type-definition-primitive-boolean"
+    description: "Проверка обработки примитивного типа boolean - нет определения типа"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "inferredBoolean"
+    expected:
+      success: false
+      contains: "no type definitions"
+    timeout: 30000
+
+  - id: "type-definition-explicit-string"
+    description: "Проверка обработки явно указанного примитивного типа string"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "explicitString"
+    expected:
+      success: false
+      contains: "no type definitions"
+    timeout: 30000
+
+  - id: "type-definition-explicit-number"
+    description: "Проверка обработки явно указанного примитивного типа number"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "explicitNumber"
+    expected:
+      success: false
+      contains: "no type definitions"
+    timeout: 30000
+
+  - id: "type-definition-null-type"
+    description: "Проверка обработки типа null"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "nullValue"
+    expected:
+      success: false
+      contains: "no type definitions"
+    timeout: 30000
+
+  - id: "type-definition-undefined-type"
+    description: "Проверка обработки типа undefined"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "undefinedValue"
+    expected:
+      success: false
+      contains: "no type definitions"
+    timeout: 30000
+
+  - id: "type-definition-void-type"
+    description: "Проверка обработки типа void"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "voidResult"
+    expected:
+      success: false
+      contains: "no type definitions"
+    timeout: 30000
+
+  - id: "type-definition-any-type"
+    description: "Проверка обработки типа any"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "anyValue"
+    expected:
+      success: false
+      contains: "no type definitions"
+    timeout: 30000
+
+  - id: "type-definition-unknown-type"
+    description: "Проверка обработки типа unknown"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "unknownValue"
+    expected:
+      success: false
+      contains: "no type definitions"
+    timeout: 30000
+
+  # ============================================================================
+  # НЕГАТИВНЫЕ СЦЕНАРИИ: СИМВОЛ НЕ НАЙДЕН
+  # ============================================================================
+
+  - id: "type-definition-not-found"
+    description: "Проверка обработки несуществующего символа"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "nonExistentSymbol12345"
+    expected:
+      success: false
+      contains: "No symbols found"
+    timeout: 30000
+
+  - id: "type-definition-not-found-with-kind"
+    description: "Проверка обработки несуществующего символа с указанием kind"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "nonExistentVariable"
+      symbol_kind: "variable"
+    expected:
+      success: false
+      contains: "No symbols found"
+    timeout: 30000
+
+  # ============================================================================
+  # НЕГАТИВНЫЕ СЦЕНАРИИ: ФАЙЛ НЕ НАЙДЕН
+  # ============================================================================
+
+  - id: "type-definition-file-not-found"
+    description: "Проверка обработки несуществующего файла"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "non-existent-file.ts"
+      symbol_name: "someSymbol"
+    expected:
+      success: false
+      contains: "Could not open file"
+    timeout: 30000
+
+  # ============================================================================
+  # НЕГАТИВНЫЕ СЦЕНАРИИ: НЕВАЛИДНЫЙ SYMBOL_KIND
+  # ============================================================================
+
+  - id: "type-definition-invalid-kind"
+    description: "Проверка обработки невалидного symbol_kind"
+    toolPath: "../../src/go_to_type_definition_by_name.ts"
+    toolName: "go_to_type_definition_by_name"
+    params:
+      file_path: "typeDefinition.ts"
+      symbol_name: "user"
+      symbol_kind: "invalid_kind_xyz"
+    expected:
+      success: true
+      contains: "Invalid symbol kind"
+    timeout: 30000

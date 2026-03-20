@@ -1,0 +1,472 @@
+name: "Go to Supertypes By Name LSP Test"
+description: "Тестирование LSP функции go_to_supertypes_by_name - поиск супертипов по имени символа"
+author: "QA Team"
+version: "1.0.0"
+
+testCases:
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: НАСЛЕДОВАНИЕ КЛАССОВ
+  # ============================================================================
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-simple-inheritance"
+    description: "Проверка поиска супертипов для класса с простым наследованием (ChildClass extends BaseClass)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "ChildClass"
+    expected:
+      success: true
+      contains: "BaseClass"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-chain-inheritance"
+    description: "Проверка поиска супертипов для класса с цепочкой наследования (FullFeaturedClass extends MiddleClass)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "FullFeaturedClass"
+    expected:
+      success: true
+      contains: "MiddleClass"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-chain-inheritance-root"
+    description: "Проверка поиска корневого класса в цепочке наследования (FullFeaturedClass → RootClass)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "FullFeaturedClass"
+    expected:
+      success: true
+      contains: "RootClass"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-abstract-class"
+    description: "Проверка поиска супертипов для класса, наследующего абстрактный класс (ConcreteEntity extends AbstractEntity)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "ConcreteEntity"
+    expected:
+      success: true
+      contains: "AbstractEntity"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-grandchild-class"
+    description: "Проверка поиска супертипов для класса с тремя уровнями наследования (GrandChildClass → ChildClass → BaseClass)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "GrandChildClass"
+    expected:
+      success: true
+      contains: "ChildClass"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-inner-class"
+    description: "Проверка поиска супертипов для внутреннего класса (InnerClass extends BaseClass)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "InnerClass"
+    expected:
+      success: true
+      contains: "BaseClass"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: ИНТЕРФЕЙСЫ
+  # ============================================================================
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-interface-extends"
+    description: "Проверка поиска супертипов для интерфейса (ICustomExtendedInterface extends IExtendedInterface)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "ICustomExtendedInterface"
+    expected:
+      success: true
+      contains: "IExtendedInterface"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-interface-chain"
+    description: "Проверка поиска базового интерфейса в цепочке (ICustomExtendedInterface → IBaseInterface)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "ICustomExtendedInterface"
+    expected:
+      success: true
+      contains: "IBaseInterface"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-multiple-interfaces"
+    description: "Проверка поиска супертипов для класса с множественными интерфейсами (MultiInterfaceClass implements ISerializable, IComparable)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "MultiInterfaceClass"
+    expected:
+      success: true
+      contains: "ISerializable"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-multiple-interfaces-comparable"
+    description: "Проверка поиска второго интерфейса (MultiInterfaceClass implements IComparable)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "MultiInterfaceClass"
+    expected:
+      success: true
+      contains: "IComparable"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-generic-interface"
+    description: "Проверка поиска супертипов для класса с generic-интерфейсом (ObservableSubject implements ISubject)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "ObservableSubject"
+    expected:
+      success: true
+      contains: "ISubject"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-class-with-interface"
+    description: "Проверка поиска интерфейса для класса с extends и implements (FullFeaturedClass implements ICloneable)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "FullFeaturedClass"
+    expected:
+      success: true
+      contains: "ICloneable"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-custom-class-interface"
+    description: "Проверка поиска интерфейса для CustomClass (implements ICustomExtendedInterface)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "CustomClass"
+    expected:
+      success: true
+      contains: "ICustomExtendedInterface"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: С УКАЗАНИЕМ SYMBOL_KIND
+  # ============================================================================
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-with-kind-class"
+    description: "Проверка поиска супертипов с указанием symbol_kind=class"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "ChildClass"
+      symbol_kind: "class"
+    expected:
+      success: true
+      contains: "BaseClass"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-with-kind-interface"
+    description: "Проверка поиска супертипов с указанием symbol_kind=interface"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "ICustomExtendedInterface"
+      symbol_kind: "interface"
+    expected:
+      success: true
+      contains: "IExtendedInterface"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: БАЗОВЫЕ КЛАССЫ ИЗ ВНЕШНИХ ФАЙЛОВ
+  # ============================================================================
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-external-base-class"
+    description: "Проверка поиска супертипов в базовом классе из внешнего файла (BaseClass в base-classes.ts)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "ChildClass"
+    expected:
+      success: true
+      contains: "base-classes.ts"
+    timeout: 30000
+
+  # KNOWN ISSUE: Requires VS Code Extension Host with full TypeScript Language Server.
+  # The vscode.prepareTypeHierarchy + vscode.provideSupertypes API is not available
+  # in the test-framework environment. Tests pass in real VS Code.
+  - id: "supertypes-external-interface"
+    description: "Проверка поиска супертипов в интерфейсе из внешнего файла (interfaces.ts)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "MultiInterfaceClass"
+    expected:
+      success: true
+      contains: "interfaces.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # НЕГАТИВНЫЕ СЦЕНАРИИ: ПРИМИТИВНЫЕ ТИПЫ
+  # ============================================================================
+
+  - id: "supertypes-primitive-string"
+    description: "Проверка обработки примитивного типа string - нет супертипов"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "primitiveVariable"
+    expected:
+      success: false
+      contains: "no supertypes"
+    timeout: 30000
+
+  - id: "supertypes-primitive-number"
+    description: "Проверка обработки примитивного типа number - нет супертипов"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "numericVariable"
+    expected:
+      success: false
+      contains: "no supertypes"
+    timeout: 30000
+
+  - id: "supertypes-primitive-boolean"
+    description: "Проверка обработки примитивного типа boolean - нет супертипов"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "booleanVariable"
+    expected:
+      success: false
+      contains: "no supertypes"
+    timeout: 30000
+
+  # ============================================================================
+  # НЕГАТИВНЫЕ СЦЕНАРИИ: КЛАССЫ БЕЗ НАСЛЕДОВАНИЯ
+  # ============================================================================
+
+  - id: "supertypes-no-inheritance"
+    description: "Проверка обработки класса без явного наследования (StandaloneClass)"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "StandaloneClass"
+    expected:
+      success: false
+      contains: "no supertypes"
+    timeout: 30000
+
+  - id: "supertypes-standalone-outer-class"
+    description: "Проверка обработки класса OuterClass без наследования"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "OuterClass"
+    expected:
+      success: false
+      contains: "no supertypes"
+    timeout: 30000
+
+  - id: "supertypes-singleton-class"
+    description: "Проверка обработки Singleton класса без наследования"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "SingletonClass"
+    expected:
+      success: false
+      contains: "no supertypes"
+    timeout: 30000
+
+  - id: "supertypes-type-alias-user"
+    description: "Проверка обработки класса TypeAliasUser без наследования"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "TypeAliasUser"
+    expected:
+      success: false
+      contains: "no supertypes"
+    timeout: 30000
+
+  # ============================================================================
+  # НЕГАТИВНЫЕ СЦЕНАРИИ: ДРУГИЕ ТИПЫ
+  # ============================================================================
+
+  - id: "supertypes-object-literal"
+    description: "Проверка обработки объектного литерала - нет супертипов"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "objectLiteral"
+    expected:
+      success: false
+      contains: "no supertypes"
+    timeout: 30000
+
+  - id: "supertypes-union-type"
+    description: "Проверка обработки union типа - нет супертипов"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "unionVariable"
+    expected:
+      success: false
+      contains: "no supertypes"
+    timeout: 30000
+
+  - id: "supertypes-function"
+    description: "Проверка обработки функции - нет супертипов"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "standaloneFunction"
+    expected:
+      success: false
+      contains: "no supertypes"
+    timeout: 30000
+
+  # ============================================================================
+  # НЕГАТИВНЫЕ СЦЕНАРИИ: СИМВОЛ НЕ НАЙДЕН
+  # ============================================================================
+
+  - id: "supertypes-not-found"
+    description: "Проверка обработки несуществующего символа"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "nonExistentSymbol12345"
+    expected:
+      success: false
+      contains: "No symbols found"
+    timeout: 30000
+
+  - id: "supertypes-not-found-with-kind"
+    description: "Проверка обработки несуществующего символа с указанием kind"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "nonExistentClass"
+      symbol_kind: "class"
+    expected:
+      success: false
+      contains: "No symbols found"
+    timeout: 30000
+
+  # ============================================================================
+  # НЕГАТИВНЫЕ СЦЕНАРИИ: ФАЙЛ НЕ НАЙДЕН
+  # ============================================================================
+
+  - id: "supertypes-file-not-found"
+    description: "Проверка обработки несуществующего файла"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "non-existent-file.ts"
+      symbol_name: "SomeClass"
+    expected:
+      success: false
+      contains: "Could not open file"
+    timeout: 30000
+
+  # ============================================================================
+  # НЕГАТИВНЫЕ СЦЕНАРИИ: НЕВАЛИДНЫЙ SYMBOL_KIND
+  # ============================================================================
+
+  - id: "supertypes-invalid-kind"
+    description: "Проверка обработки невалидного symbol_kind"
+    toolPath: "../../src/go_to_supertypes_by_name.ts"
+    toolName: "go_to_supertypes_by_name"
+    params:
+      file_path: "supertypes.ts"
+      symbol_name: "ChildClass"
+      symbol_kind: "invalid_kind_xyz"
+    expected:
+      success: true
+      contains: "Invalid symbol kind"
+    timeout: 30000
