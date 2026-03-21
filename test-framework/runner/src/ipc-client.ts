@@ -300,9 +300,9 @@ export class IPCClient {
     }
 
     const message: IPCMessage = {
-      type: 'request',
+      type: 'shutdown',
       id: randomUUID(),
-      payload: { command: 'shutdown' },
+      payload: {},
     };
 
     return new Promise((resolve, reject) => {
