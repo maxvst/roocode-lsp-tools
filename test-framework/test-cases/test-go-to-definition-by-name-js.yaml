@@ -1,0 +1,137 @@
+name: "Go to Definition By Name LSP Test"
+description: "Тестирование LSP функции go_to_definition_by_name - поиск определения по имени символа"
+author: "QA Team"
+version: "1.0.0"
+
+testCases:
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: ФУНКЦИИ
+  # ============================================================================
+
+  - id: "go-to-definition-by-name-function"
+    description: "Проверка перехода к определению функции по имени"
+    toolPath: "../../src/dist/go_to_definition_by_name.js"
+    toolName: "go_to_definition_by_name"
+    params:
+      file_path: "definition.ts"
+      symbol_name: "definitionFunction"
+    expected:
+      success: true
+      contains: "definition-deps/functions.ts"
+    timeout: 30000
+
+  - id: "go-to-definition-by-name-function-with-kind"
+    description: "Проверка перехода к определению функции с указанием kind"
+    toolPath: "../../src/dist/go_to_definition_by_name.js"
+    toolName: "go_to_definition_by_name"
+    params:
+      file_path: "definition.ts"
+      symbol_name: "calculateArea"
+      symbol_kind: "function"
+    expected:
+      success: true
+      contains: "definition-deps/functions.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: ПЕРЕМЕННЫЕ
+  # ============================================================================
+
+  - id: "go-to-definition-by-name-variable"
+    description: "Проверка перехода к определению переменной по имени"
+    toolPath: "../../src/dist/go_to_definition_by_name.js"
+    toolName: "go_to_definition_by_name"
+    params:
+      file_path: "definition.ts"
+      symbol_name: "definitionVariable"
+    expected:
+      success: true
+      contains: "definition-deps/variables.ts"
+    timeout: 30000
+
+  - id: "go-to-definition-by-name-constant"
+    description: "Проверка перехода к определению константы по имени"
+    toolPath: "../../src/dist/go_to_definition_by_name.js"
+    toolName: "go_to_definition_by_name"
+    params:
+      file_path: "definition.ts"
+      symbol_name: "DEFINITION_CONSTANT"
+    expected:
+      success: true
+      contains: "definition-deps/variables.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # ПОЗИТИВНЫЕ СЦЕНАРИИ: КЛАССЫ
+  # ============================================================================
+
+  - id: "go-to-definition-by-name-class"
+    description: "Проверка перехода к определению класса по имени"
+    toolPath: "../../src/dist/go_to_definition_by_name.js"
+    toolName: "go_to_definition_by_name"
+    params:
+      file_path: "definition.ts"
+      symbol_name: "DefinitionClass"
+      symbol_kind: "class"
+    expected:
+      success: true
+      contains: "definition-deps/classes.ts"
+    timeout: 30000
+
+  - id: "go-to-definition-by-name-interface"
+    description: "Проверка перехода к определению интерфейса по имени"
+    toolPath: "../../src/dist/go_to_definition_by_name.js"
+    toolName: "go_to_definition_by_name"
+    params:
+      file_path: "definition.ts"
+      symbol_name: "IDefinitionInterface"
+      symbol_kind: "interface"
+    expected:
+      success: true
+      contains: "definition-deps/classes.ts"
+    timeout: 30000
+
+  # ============================================================================
+  # СЦЕНАРИИ С НЕСКОЛЬКИМИ СОВПАДЕНИЯМИ
+  # ============================================================================
+
+  - id: "go-to-definition-by-name-partial-match"
+    description: "Проверка частичного совпадения имени (includes)"
+    toolPath: "../../src/dist/go_to_definition_by_name.js"
+    toolName: "go_to_definition_by_name"
+    params:
+      file_path: "definition.ts"
+      symbol_name: "Definition"
+    expected:
+      success: true
+      # Должен найти несколько символов содержащих "Definition"
+    timeout: 30000
+
+  # ============================================================================
+  # НЕГАТИВНЫЕ СЦЕНАРИИ
+  # ============================================================================
+
+  - id: "go-to-definition-by-name-not-found"
+    description: "Проверка обработки несуществующего символа"
+    toolPath: "../../src/dist/go_to_definition_by_name.js"
+    toolName: "go_to_definition_by_name"
+    params:
+      file_path: "definition.ts"
+      symbol_name: "nonExistentSymbol12345"
+    expected:
+      success: false
+      contains: "No symbols found"
+    timeout: 30000
+
+  - id: "go-to-definition-by-name-invalid-kind"
+    description: "Проверка обработки невалидного symbol_kind"
+    toolPath: "../../src/dist/go_to_definition_by_name.js"
+    toolName: "go_to_definition_by_name"
+    params:
+      file_path: "definition.ts"
+      symbol_name: "definitionFunction"
+      symbol_kind: "invalid_kind_xyz"
+    expected:
+      success: true
+      contains: "Invalid symbol kind"
+    timeout: 30000
