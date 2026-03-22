@@ -6,7 +6,7 @@ version: "1.0.0"
 testCases:
   - id: "go-to-definition-variables"
     description: "Проверка перехода к определению переменной"
-    toolPath: "../../src/go_to_definition.ts"
+    toolPath: "../test-tools/go_to_definition.ts"
     toolName: "go_to_definition"
     params:
       file_path: "definition.ts"

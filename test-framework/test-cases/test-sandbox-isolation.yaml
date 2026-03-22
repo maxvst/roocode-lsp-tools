@@ -1,13 +1,13 @@
 name: "Sandbox Isolation Test"
 version: "1.0"
 description: |
-  Validates that the sandbox isolation mechanism correctly restores 
+  Validates that the sandbox isolation mechanism correctly restores
   the workspace state between test cases.
 
 testCases:
   - id: "delete-file-first"
     description: "First deletion of file_to_delete.txt"
-    toolPath: "../../src/delete_file.ts"
+    toolPath: "../test-tools/delete_file.ts"
     toolName: "delete_file"
     params:
       filePath: "file_to_delete.txt"
@@ -17,7 +17,7 @@ testCases:
 
   - id: "delete-file-second"
     description: "Second deletion of the same file (should work due to isolation)"
-    toolPath: "../../src/delete_file.ts"
+    toolPath: "../test-tools/delete_file.ts"
     toolName: "delete_file"
     params:
       filePath: "file_to_delete.txt"
