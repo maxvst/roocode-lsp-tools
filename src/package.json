@@ -4,7 +4,7 @@
   "description": "Custom LSP tools for Roo-Code plugin",
   "type": "commonjs",
   "scripts": {
-    "build": "node esbuild.config.mjs",
+    "build": "tsc --noEmit && node esbuild.config.mjs",
     "build:watch": "node esbuild.config.mjs --watch",
     "clean": "rm -rf dist",
     "rebuild": "npm run clean && npm run build",

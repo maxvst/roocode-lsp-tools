@@ -16,7 +16,8 @@
     "build:test-logic": "npm run build -w test-logic",
     "build:cli": "tsc cli.ts --outDir . --module NodeNext --moduleResolution NodeNext --target ES2022 --esModuleInterop",
     "clean": "npm run clean -ws && rm -f cli.js",
-    "test": "node cli.js test",
+    "test": "npm run build --prefix ../src && node cli.js test",
+    "test-without-build": "node cli.js test",
     "test:verbose": "node cli.js test --verbose",
     "test:file": "node cli.js test --file",
     "test:junit": "node cli.js test --reporter junit --output test-results.xml"

@@ -14,13 +14,14 @@
 import { parametersSchema as z, defineCustomTool } from "@roo-code/types"
 import path from "path"
 import { readFileSync } from "fs"
+import type * as vscodeTypes from "vscode"
 
 // Dynamic require for vscode - this module is provided by VSCode at runtime.
 // We use a computed require to prevent esbuild from trying to resolve/bundle it.
 // The vscode module is special and only exists in VSCode extension host context.
 const vscodeModule = "vscode"
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const vscode = require(vscodeModule) as typeof import("vscode")
+const vscode = require(vscodeModule) as typeof vscodeTypes
 
 // ============================================================================
 // INTERFACES
@@ -181,8 +182,8 @@ function getValidSymbolKinds(): string[] {
  * Flatten hierarchical DocumentSymbol[] to a flat array
  * This recursively extracts all nested symbols
  */
-function flattenDocumentSymbols(symbols: vscode.DocumentSymbol[]): vscode.DocumentSymbol[] {
-	const flattened: vscode.DocumentSymbol[] = []
+function flattenDocumentSymbols(symbols: vscodeTypes.DocumentSymbol[]): vscodeTypes.DocumentSymbol[] {
+	const flattened: vscodeTypes.DocumentSymbol[] = []
 	for (const symbol of symbols) {
 		flattened.push(symbol)
 		if (symbol.children && symbol.children.length > 0) {
@@ -244,8 +245,8 @@ function findSymbolPositionInFile(
  * Check if the symbols array is DocumentSymbol[] (hierarchical) or SymbolInformation[] (flat)
  */
 function isDocumentSymbolArray(
-	symbols: vscode.DocumentSymbol[] | vscode.SymbolInformation[]
-): symbols is vscode.DocumentSymbol[] {
+	symbols: vscodeTypes.DocumentSymbol[] | vscodeTypes.SymbolInformation[]
+): symbols is vscodeTypes.DocumentSymbol[] {
 	if (symbols.length === 0) return true
 	const firstSymbol = symbols[0]
 	if (!firstSymbol) return true
@@ -307,7 +308,7 @@ function escapeRegExp(string: string): string {
  * Returns array of SymbolMatch with positions
  */
 async function findSymbolsByName(
-	uri: vscode.Uri,
+	uri: vscodeTypes.Uri,
 	filePath: string,
 	symbolName: string,
 	symbolKind?: string
@@ -344,7 +345,7 @@ async function findSymbolsByName(
 	// Strategy 2: Also check document symbols for definitions
 	// This provides better kind information for locally defined symbols
 	const symbols = await vscode.commands.executeCommand<
-		vscode.DocumentSymbol[] | vscode.SymbolInformation[]
+		vscodeTypes.DocumentSymbol[] | vscodeTypes.SymbolInformation[]
 	>("vscode.executeDocumentSymbolProvider", uri)
 
 	if (symbols && symbols.length > 0) {
@@ -398,7 +399,7 @@ async function findSymbolsByName(
 			}
 		} else {
 			// Flat format (SymbolInformation[])
-			for (const symbol of symbols) {
+			for (const symbol of symbols as vscodeTypes.SymbolInformation[]) {
 				const nameMatches = symbol.name === symbolName
 				const kindMatches =
 					!effectiveSymbolKind ||
