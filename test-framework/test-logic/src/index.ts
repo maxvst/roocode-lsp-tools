@@ -41,6 +41,8 @@ export { TestRunner, createTestRunner, getDefaultUserDataDir } from './test-runn
 export { TestCaseLoader, createTestCaseLoader, TestCaseLoadError } from './test-case-loader.js';
 export { ConsoleReporter, JUnitReporter, createReporter } from './reporter.js';
 export { ResultValidator } from './test-runner.js';
+export { SandboxManager, createSandboxManager } from './sandbox-manager.js';
+export type { SandboxConfig, SandboxState } from './sandbox-manager.js';
 
 /**
  * Парсинг аргументов командной строки

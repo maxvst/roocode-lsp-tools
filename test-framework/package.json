@@ -1,6 +1,6 @@
 {
   "name": "roocode-lsp-tools-test-framework",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Test framework for RooCode Custom Tools",
   "private": true,
   "type": "module",

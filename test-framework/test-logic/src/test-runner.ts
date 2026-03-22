@@ -1,13 +1,16 @@
 /**
  * Test Runner - главный класс для запуска тестов
- * 
+ *
  * Интегрируется с IsolatedRunner для выполнения тестов в VSCode
+ * Использует SandboxManager для изоляции файловой системы
  */
 
 import * as path from 'path';
 import * as os from 'os';
+import * as fs from 'fs';
 import { TestCaseLoader } from './test-case-loader.js';
 import { ConsoleReporter, JUnitReporter } from './reporter.js';
+import { SandboxManager, createSandboxManager } from './sandbox-manager.js';
 import {
   TestRunnerConfig,
   ResolvedTestCase,
@@ -69,7 +72,7 @@ export class ResultValidator {
   /**
    * Валидировать результат теста
    */
-  validate(output: unknown, expected: ExpectedResult | undefined): ValidationResult {
+  validate(output: unknown, expected: ExpectedResult | undefined, workspaceDir: string): ValidationResult {
     if (!expected) {
       return { passed: true };
     }
@@ -109,6 +112,22 @@ export class ResultValidator {
     // Проверяем jsonSchema (опционально)
     if (expected.jsonSchema !== undefined) {
       const result = this.validateJsonSchema(output, expected.jsonSchema);
+      if (!result.passed) {
+        return result;
+      }
+    }
+
+    // Проверяем fileExists
+    if (expected.fileExists !== undefined) {
+      const result = this.validateFileExists(expected.fileExists, workspaceDir);
+      if (!result.passed) {
+        return result;
+      }
+    }
+
+    // Проверяем fileNotExists
+    if (expected.fileNotExists !== undefined) {
+      const result = this.validateFileNotExists(expected.fileNotExists, workspaceDir);
       if (!result.passed) {
         return result;
       }
@@ -203,6 +222,52 @@ export class ResultValidator {
       };
     }
   }
+
+  /**
+   * Проверяет существование файлов
+   * @param paths - путь или массив путей (относительно workspaceDir)
+   * @param workspaceDir - корневая директория workspace
+   */
+  validateFileExists(paths: string | string[], workspaceDir: string): ValidationResult {
+    const pathList = Array.isArray(paths) ? paths : [paths];
+    
+    for (const relativePath of pathList) {
+      const fullPath = path.join(workspaceDir, relativePath);
+      if (!fs.existsSync(fullPath)) {
+        return {
+          passed: false,
+          matcher: 'fileExists',
+          expected: relativePath,
+          error: `File should exist but not found: ${relativePath}`,
+        };
+      }
+    }
+    
+    return { passed: true, matcher: 'fileExists', expected: paths };
+  }
+
+  /**
+   * Проверяет отсутствие файлов
+   * @param paths - путь или массив путей (относительно workspaceDir)
+   * @param workspaceDir - корневая директория workspace
+   */
+  validateFileNotExists(paths: string | string[], workspaceDir: string): ValidationResult {
+    const pathList = Array.isArray(paths) ? paths : [paths];
+    
+    for (const relativePath of pathList) {
+      const fullPath = path.join(workspaceDir, relativePath);
+      if (fs.existsSync(fullPath)) {
+        return {
+          passed: false,
+          matcher: 'fileNotExists',
+          expected: relativePath,
+          error: `File should not exist but found: ${relativePath}`,
+        };
+      }
+    }
+    
+    return { passed: true, matcher: 'fileNotExists', expected: paths };
+  }
 }
 
 /**
@@ -214,6 +279,8 @@ export class TestRunner {
   private consoleReporter: ConsoleReporter;
   private validator: ResultValidator;
   private isolatedRunner: IsolatedRunner | null = null;
+  private sandbox: SandboxManager | null = null;
+  private sandboxWorkspaceDir: string = '';
 
   constructor(config: TestRunnerConfig) {
     this.config = {
@@ -316,9 +383,16 @@ export class TestRunner {
   }
 
   /**
-   * Инициализировать IsolatedRunner
+   * Инициализировать IsolatedRunner и SandboxManager
    */
   private async initializeRunner(): Promise<void> {
+    // Инициализируем sandbox для изоляции файловой системы
+    this.sandbox = createSandboxManager({
+      originalWorkspace: this.config.workspaceDir,
+    });
+    this.sandboxWorkspaceDir = await this.sandbox.initialize();
+    console.log(`[TestRunner] Sandbox workspace: ${this.sandboxWorkspaceDir}`);
+
     // Динамический импорт runner
     const runnerPath = path.join(this.config.extensionDevelopmentPath, '..', 'runner', 'dist', 'index.js');
     const { IsolatedRunner } = await import(runnerPath);
@@ -326,7 +400,7 @@ export class TestRunner {
     const runnerConfig: IsolatedRunnerConfig = {
       userDataDir: this.config.userDataDir,
       extensionDevelopmentPath: this.config.extensionDevelopmentPath,
-      workspaceDir: this.config.workspaceDir,
+      workspaceDir: this.sandboxWorkspaceDir, // Используем sandbox директорию
       timeout: this.config.timeout,
     };
 
@@ -336,12 +410,16 @@ export class TestRunner {
   }
 
   /**
-   * Остановить IsolatedRunner
+   * Остановить IsolatedRunner и очистить SandboxManager
    */
   private async shutdownRunner(): Promise<void> {
     if (this.isolatedRunner) {
       await this.isolatedRunner.stop();
       this.isolatedRunner = null;
+    }
+    if (this.sandbox) {
+      await this.sandbox.cleanup();
+      this.sandbox = null;
     }
   }
 
@@ -369,10 +447,14 @@ export class TestRunner {
         mode: testCase.definition.context?.mode || 'code',
       });
 
-      // Валидируем результат
-      const validation = this.validator.validate(result.output, testCase.definition.expected);
+      // Валидируем результат (используем sandbox директорию для проверки файлов)
+      const validation = this.validator.validate(
+        result.output,
+        testCase.definition.expected,
+        this.sandboxWorkspaceDir || this.config.workspaceDir
+      );
 
-      return {
+      const testResult: TestExecutionResult = {
         testId: testCase.definition.id,
         description: testCase.definition.description,
         suiteName: testCase.suiteName,
@@ -385,7 +467,19 @@ export class TestRunner {
         validation,
         timestamp: new Date().toISOString(),
       };
+
+      // Сбрасываем sandbox ПОСЛЕ теста для восстановления состояния перед следующим тестом
+      if (this.sandbox) {
+        await this.sandbox.reset();
+      }
+
+      return testResult;
     } catch (error) {
+      // Даже при ошибке сбрасываем sandbox
+      if (this.sandbox) {
+        await this.sandbox.reset();
+      }
+      
       return this.createErrorResult(
         testCase,
         error instanceof Error ? error.message : String(error),

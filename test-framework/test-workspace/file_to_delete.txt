@@ -1,0 +1,2 @@
+This is a test file for sandbox isolation validation.
+It should be restored after each test case.

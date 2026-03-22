@@ -82,6 +82,10 @@ export interface ExpectedResult {
   success?: boolean;
   /** Проверка длительности */
   duration?: DurationMatcher;
+  /** Путь или массив путей, которые должны существовать */
+  fileExists?: string | string[];
+  /** Путь или массив путей, которых не должно быть */
+  fileNotExists?: string | string[];
 }
 
 /**
